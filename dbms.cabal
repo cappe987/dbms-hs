@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8db121c1f988af761eb8cd3a388a32259c448eade8fcdc287633bdfc98dcb549
+-- hash: a636e2a1af6134ccfba970956d226c27dd43309e8d6bd3fbe13af2116127112b
 
 name:           dbms
 version:        0.1.0.0
@@ -27,8 +27,11 @@ source-repository head
 
 library
   exposed-modules:
+      Decoder
+      Encoder
       Lib
       MemoryBlock
+      Schema
   other-modules:
       Paths_dbms
   hs-source-dirs:
