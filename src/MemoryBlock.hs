@@ -32,7 +32,7 @@ to read the whole file).
 
 
 
-type MemoryBlock a = [a]
+-- type MemoryBlock a = [a]
 
 
 
@@ -97,37 +97,70 @@ test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
 --   put (Some ss is) = put ss <> put is
 --   get (Some ss is) = 
 
-encodeMB :: Serialize a => MemoryBlock a -> ByteString
-encodeMB = Prelude.foldl (\acc s-> acc <> encode s) Data.ByteString.empty
+encodeMB :: Schema -> [Row] -> Maybe ByteString
+encodeMB schema = 
+  Prelude.foldl (\acc r-> acc <> encodeRow schema r) (Just Data.ByteString.empty)
 
 -- data MemoryBlock a where
 --   Block :: Serialize a => a -> MemoryBlock a
 
-test :: Int32
-test = 2147483647
+intMax :: Int32
+intMax = 2147483647
 
 
 
 
 
-
+-- Size of a block on disk
 blocksize :: Int
-blocksize = 4096
+-- blocksize = 4096
+blocksize = 30
 
+-- Points to where the next block is
+-- Positioned at the 4 last bytes of a block
 pointersize :: Int
 pointersize = 4
 
--- Replace with 'a
--- createBlock :: Schema -> MemoryBlock Rows -> (ByteString, MemoryBlock Rows)
--- createBlock schema xs = 
---   let size = rowsize schema
---       maxAmount = (blocksize - pointersize) `div` size
---       bs = 
---   in 
+-- Contains how many rows exists in a block
+-- Positioned at the 4 first bytes of a block
+blockmetadata :: Int
+blockmetadata = 4
+
+
+
+padBytestring :: Int -> ByteString
+padBytestring n = 
+  Prelude.foldl (<>) Data.ByteString.empty (Prelude.replicate n (encode '\NUL'))
+
+padMemoryBlock :: Int -> Int -> ByteString
+padMemoryBlock rowsize rowcount = 
+  padBytestring (blocksize - (blockmetadata + rowsize*rowcount + pointersize)) 
+
+-- Note: add handling for schemas that are larger 
+-- than (blocksize - pointersize - blockmetadata) bytes.
+-- Returns a list of ByteStrings where the last 4 bytes for pointersize are not added.
+-- So the calling function can fill in the pointers or null.
+createBlocks :: Schema -> [Row] -> Maybe [ByteString]
+createBlocks schema [] = Just []
+createBlocks schema xs = 
+  let size          = rowsize schema
+      maxAmount     = (blocksize - pointersize - blockmetadata) `div` size 
+      rowsInBlock   = encodeInt (fromIntegral maxAmount)
+      bsMaybe       = encodeMB schema (Prelude.take maxAmount xs)
+      remainingRows = Prelude.drop maxAmount xs
+  in do
+    bs <- bsMaybe
+    let block = rowsInBlock <> bs <> padMemoryBlock size maxAmount
+    
+    (:) <$> Just block <*> createBlocks schema remainingRows
+    -- rest <- createBlocks schema remainingRows
+    -- Just $ paddedBs : rest
 
   
--- test6 = 
---   createBlock [SInt32, SVarchar 10] []
+test6 = 
+  createBlocks 
+    [SInt32, SVarchar 7] 
+    [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
 
 
 -- test6 = undefined
