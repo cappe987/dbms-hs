@@ -100,9 +100,6 @@ test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
 --   put (Some ss is) = put ss <> put is
 --   get (Some ss is) = 
 
-encodeMB :: Schema -> [Row] -> ByteString
-encodeMB schema = 
-  P.foldl (\acc r-> acc <> encodeRow schema r) Data.ByteString.empty
 
 -- data MemoryBlock a where
 --   Block :: Serialize a => a -> MemoryBlock a
@@ -144,9 +141,33 @@ padMemoryBlock rowsize rowcount =
 
 
 
+-- Creates block without the 4 pointer bytes at the end
+-- Ignores any rows that don't fit
+createBlock :: TableDetails -> [Row] -> ByteString
+createBlock details rows = 
+  let size           = rowsize details
+      len            = P.length rows
+      maxAmount      = actualsize `div` size 
+      nrRowsToEncode = min maxAmount len
+      rowsInBlock    = encodeInt (fromIntegral nrRowsToEncode)
+      bs             = encodeRows (schema details) (P.take nrRowsToEncode rows)
+  in rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
 
-createSingleBlock :: Schema -> Row -> ByteString
-createSingleBlock schema row = undefined
+-- Ignores any rows that don't fit
+createBlockWPointer :: TableDetails -> [Row] -> Int32 -> ByteString
+createBlockWPointer details rows pointer = 
+  createBlock details rows <> encodeInt pointer
+
+-- Appends a row to the bytestring and edits the counter metadata
+-- Keeps the pointer. This could occur if rows are deleted from a 
+-- block that points somewhere, so new rows can be added to that block.
+appendRow :: TableDetails -> ByteString -> Row -> ByteString
+appendRow details orig row = 
+  let (rows, pointer) = readBlock (schema details) orig
+      -- newrow          = evalState (decodeRow schema) row
+  in createBlock details (rows ++ [row]) <> encodeInt pointer
+
+
 
 -- Note: add handling for schemas that are larger 
 -- than (blocksize - pointersize - blockmetadata) bytes.
@@ -155,13 +176,13 @@ createSingleBlock schema row = undefined
 createBlocks :: Schema -> [Row] -> [ByteString]
 createBlocks schema [] = []
 createBlocks schema xs = 
-  let size          = getRowsize schema
-      len           = P.length xs
-      nrRowsToEncode  = min maxAmount len
-      maxAmount     = (blocksize - pointersize - blockmetadata) `div` size 
-      rowsInBlock   = encodeInt (fromIntegral nrRowsToEncode)
-      bs            = encodeMB schema (P.take nrRowsToEncode xs)
-      remainingRows = P.drop nrRowsToEncode xs
+  let size           = getRowsize schema
+      len            = P.length xs
+      maxAmount      = (blocksize - pointersize - blockmetadata) `div` size 
+      nrRowsToEncode = min maxAmount len
+      rowsInBlock    = encodeInt (fromIntegral nrRowsToEncode)
+      bs             = encodeRows schema (P.take nrRowsToEncode xs)
+      remainingRows  = P.drop nrRowsToEncode xs
       block = rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
   in 
     block : createBlocks schema remainingRows

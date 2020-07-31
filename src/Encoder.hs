@@ -46,3 +46,7 @@ encodeRow ss rs =
   else
     undefined
 
+
+encodeRows :: Schema -> [Row] -> ByteString
+encodeRows schema = 
+  P.foldl (\acc r-> acc <> encodeRow schema r) Data.ByteString.empty
