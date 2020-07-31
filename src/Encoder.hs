@@ -7,6 +7,7 @@ import Data.Serialize
 import Data.Int
 
 import Schema
+import Constants
 
 encodeString :: String -> ByteString
 encodeString = C8.pack
@@ -50,3 +51,63 @@ encodeRow ss rs =
 encodeRows :: Schema -> [Row] -> ByteString
 encodeRows schema = 
   P.foldl (\acc r-> acc <> encodeRow schema r) Data.ByteString.empty
+
+
+
+
+
+padBytestring :: Int -> ByteString
+padBytestring n = 
+  P.foldl (<>) Data.ByteString.empty (P.replicate n (encode '\NUL'))
+
+padMemoryBlock :: Int -> Int -> ByteString
+padMemoryBlock rowsize rowcount = 
+  padBytestring (blocksize - (blockmetadata + rowsize*rowcount + pointersize)) 
+
+
+
+-- Creates block without the 4 pointer bytes at the end
+-- Ignores any rows that don't fit
+-- Maybe make it return a list of the rows that didn't fit?
+encodeBlock :: TableDetails -> [Row] -> ByteString
+encodeBlock details rows = 
+  let size           = rowsize details
+      len            = P.length rows
+      maxAmount      = actualsize `div` size 
+      nrRowsToEncode = min maxAmount len
+      rowsInBlock    = encodeInt (fromIntegral nrRowsToEncode)
+      bs             = encodeRows (schema details) (P.take nrRowsToEncode rows)
+  in rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
+
+-- Ignores any rows that don't fit
+encodeBlockWPointer :: TableDetails -> [Row] -> Int32 -> ByteString
+encodeBlockWPointer details rows pointer = 
+  encodeBlock details rows <> encodeInt pointer
+
+
+
+
+-- Note: add handling for schemas that are larger 
+-- than (blocksize - pointersize - blockmetadata) bytes.
+-- Returns a list of ByteStrings where the last 4 bytes for pointersize are not added.
+-- So the calling function can fill in the pointers or null.
+-- This might be useful when rehashing.
+createBlocks :: Schema -> [Row] -> [ByteString]
+createBlocks schema [] = []
+createBlocks schema xs = 
+  let size           = getRowsize schema
+      len            = P.length xs
+      maxAmount      = (blocksize - pointersize - blockmetadata) `div` size 
+      nrRowsToEncode = min maxAmount len
+      rowsInBlock    = encodeInt (fromIntegral nrRowsToEncode)
+      bs             = encodeRows schema (P.take nrRowsToEncode xs)
+      remainingRows  = P.drop nrRowsToEncode xs
+      block = rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
+  in 
+    block : createBlocks schema remainingRows
+    -- rest <- createBlocks schema remainingRows
+    -- Just $ paddedBs : rest
+
+
+  
+

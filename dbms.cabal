@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bac7856b645666e081f95ee191f08a5fb48adf7d85eccee64e1fd4a1fa2889fa
+-- hash: b801105401d1a8fd7a98cdd9a91b077268a875d070c6fe010043e06747ab0184
 
 name:           dbms
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Constants
       Decoder
       Encoder
       Hashtable

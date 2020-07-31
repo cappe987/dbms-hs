@@ -84,4 +84,6 @@ decodeRows schema n = do
   (:) <$> return row <*> decodeRows schema (n-1)
 
 
-
+decodeBlock :: Schema -> ByteString -> ([Row], Int32)
+decodeBlock schema = 
+  evalState ((,) <$> (decodeInt >>= decodeRows schema) <*> decodePointer)

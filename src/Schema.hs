@@ -42,3 +42,15 @@ instance Hashable RowValue where
 
   hash (RInt32 i ) = hash i
   hash (RString s) = hash s
+
+
+
+
+data TableDetails = TableDetails {
+    schema    :: Schema
+  , rowsize   :: Int
+  , tablename :: String
+  , primesize :: Int32
+}
+
+

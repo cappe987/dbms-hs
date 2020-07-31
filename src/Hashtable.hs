@@ -15,6 +15,7 @@ import Schema
 import Encoder
 import Decoder
 import MemoryBlock
+import Constants
 
 
 
@@ -40,32 +41,13 @@ createTable name schema = undefined
 
 
 
-data TableDetails = TableDetails {
-    schema    :: Schema
-  , rowsize   :: Int
-  , tablename :: String
-  , primesize :: Int32
-}
-
-
 
 -- Calculates if one more row fits in the current block
 fitsInBlock :: Int -> Int -> Bool
 fitsInBlock schemasize amount = actualsize - (schemasize * amount) > schemasize
 
 
-replacePointer :: Int -> ByteString -> ByteString
-replacePointer p bs = 
-  C8.reverse bs
-  & C8.drop pointersize
-  & C8.reverse
-  & (<> encodeInt (fromIntegral p))
 
-getPointer :: ByteString -> Int
-getPointer = fromIntegral . evalState decodePointer
-
-getBlockRowcount :: ByteString -> Int
-getBlockRowcount = fromIntegral . evalState decodePointer 
 
 findOrMakeBlock :: TableDetails -> Handle -> ByteString -> Int -> IO ()
 findOrMakeBlock details hdl bsrow index = do
@@ -84,7 +66,7 @@ findOrMakeBlock details hdl bsrow index = do
     if fitsInBlock (rowsize details) (getBlockRowcount bs) then do
       -- return (index, Just bs <> encodeRow (schema details) row)
       print "FITS"
-      let olddata = fst $ readBlock (schema details) bs
+      let olddata = fst $ decodeBlock (schema details) bs
           newdata = olddata ++ [evalState (decodeRow (schema details)) bsrow]
 
       hPut hdl $ P.head $ createBlocks (schema details) newdata
@@ -137,7 +119,7 @@ readDiskBlock index filename schema = do
 
   bs <- hGet hdl blocksize
 
-  return $ fst $ readBlock schema bs
+  return $ fst $ decodeBlock schema bs
 
   -- return []
 
