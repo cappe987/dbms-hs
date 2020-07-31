@@ -100,9 +100,9 @@ test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
 --   put (Some ss is) = put ss <> put is
 --   get (Some ss is) = 
 
-encodeMB :: Schema -> [Row] -> Maybe ByteString
+encodeMB :: Schema -> [Row] -> ByteString
 encodeMB schema = 
-  P.foldl (\acc r-> acc <> encodeRow schema r) (Just Data.ByteString.empty)
+  P.foldl (\acc r-> acc <> encodeRow schema r) Data.ByteString.empty
 
 -- data MemoryBlock a where
 --   Block :: Serialize a => a -> MemoryBlock a
@@ -130,6 +130,8 @@ pointersize = 4
 blockmetadata :: Int
 blockmetadata = 4
 
+actualsize :: Int
+actualsize = blocksize - pointersize - blockmetadata
 
 
 padBytestring :: Int -> ByteString
@@ -140,25 +142,29 @@ padMemoryBlock :: Int -> Int -> ByteString
 padMemoryBlock rowsize rowcount = 
   padBytestring (blocksize - (blockmetadata + rowsize*rowcount + pointersize)) 
 
+
+
+
+createSingleBlock :: Schema -> Row -> ByteString
+createSingleBlock schema row = undefined
+
 -- Note: add handling for schemas that are larger 
 -- than (blocksize - pointersize - blockmetadata) bytes.
 -- Returns a list of ByteStrings where the last 4 bytes for pointersize are not added.
 -- So the calling function can fill in the pointers or null.
-createBlocks :: Schema -> [Row] -> Maybe [ByteString]
-createBlocks schema [] = Just []
+createBlocks :: Schema -> [Row] -> [ByteString]
+createBlocks schema [] = []
 createBlocks schema xs = 
-  let size          = rowsize schema
+  let size          = getRowsize schema
       len           = P.length xs
       nrRowsToEncode  = min maxAmount len
       maxAmount     = (blocksize - pointersize - blockmetadata) `div` size 
       rowsInBlock   = encodeInt (fromIntegral nrRowsToEncode)
-      bsMaybe       = encodeMB schema (P.take nrRowsToEncode xs)
+      bs            = encodeMB schema (P.take nrRowsToEncode xs)
       remainingRows = P.drop nrRowsToEncode xs
-  in do
-    bs <- bsMaybe
-    let block = rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
-    
-    (:) <$> Just block <*> createBlocks schema remainingRows
+      block = rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
+  in 
+    block : createBlocks schema remainingRows
     -- rest <- createBlocks schema remainingRows
     -- Just $ paddedBs : rest
 
@@ -177,17 +183,6 @@ testschema = [SInt32, SVarchar 10]
   
 test6 = 
   createBlocks testschema [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
-  & fromJust 
   & P.map (addPointer 5)
   & P.map (readBlock testschema)
-
-
--- test6 = undefined
-
--- writeBlockToFile :: MemoryBlock a -> IO ()
--- writeBlockToFile mb = 
-
-
-
-
 
