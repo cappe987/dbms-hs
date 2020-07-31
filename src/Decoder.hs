@@ -50,10 +50,38 @@ getDecoder (SVarchar n) = RString <$> decodeVarchar n
 
 
 
-decodeRow :: Schema -> ByteString -> Row
-decodeRow ss bs = 
+-- decodeRow :: Schema -> ByteString -> Row
+decodeRow :: Schema -> State ByteString Row
+decodeRow ss = 
   let decoders = getDecoder <$> ss
       rowdecoder = sequenceA decoders :: State ByteString Row
-  in evalState rowdecoder bs
+  -- in evalState rowdecoder bs
+  in rowdecoder
+
+-- Removes padding for when the last row didn't quite take up all 
+-- the bytes in the block, or if it's the last in the block.
+removePaddingToPointer :: ByteString -> ByteString
+removePaddingToPointer xs 
+  | C8.length xs < 4 = undefined
+  | otherwise = C8.reverse $ C8.take 4 $ C8.reverse xs
+
+
+decodePointer :: State ByteString Int32
+decodePointer = do 
+  bs <- ST.get
+  let pointerBytes = removePaddingToPointer bs
+  ST.put pointerBytes
+  decodeInt
+
+
+
+decodeRows :: Schema -> Int32 -> State ByteString [Row]
+decodeRows schema 0 = return []
+decodeRows schema n = do 
+  bs  <- ST.get
+  row <- decodeRow schema
+
+  (:) <$> return row <*> decodeRows schema (n-1)
+
 
 

@@ -1,11 +1,14 @@
 module MemoryBlock where 
 
+import Prelude as P
 import Data.ByteString
 import Data.ByteString.Char8 as C8
 import Data.Serialize
 import Data.Int
 import Control.Monad.Trans.State as ST
+import Data.Function
 -- import Data.Either
+import Data.Maybe
 
 import Schema
 import Encoder
@@ -51,7 +54,7 @@ bslength = Data.ByteString.foldl (\acc _ -> acc + 1) 0
 --       c = fromRight '\NUL' res
 --   ST.put $ Data.ByteString.drop 1 bs
 --   let result 
---         | len == 1 = return $ Prelude.reverse (c:s)
+--         | len == 1 = return $ P.reverse (c:s)
 --         | otherwise = decodeVarchar (len-1) (c:s)
 --   result
 
@@ -99,7 +102,7 @@ test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
 
 encodeMB :: Schema -> [Row] -> Maybe ByteString
 encodeMB schema = 
-  Prelude.foldl (\acc r-> acc <> encodeRow schema r) (Just Data.ByteString.empty)
+  P.foldl (\acc r-> acc <> encodeRow schema r) (Just Data.ByteString.empty)
 
 -- data MemoryBlock a where
 --   Block :: Serialize a => a -> MemoryBlock a
@@ -114,7 +117,8 @@ intMax = 2147483647
 -- Size of a block on disk
 blocksize :: Int
 -- blocksize = 4096
-blocksize = 30
+-- blocksize = 30
+blocksize = 60
 
 -- Points to where the next block is
 -- Positioned at the 4 last bytes of a block
@@ -130,7 +134,7 @@ blockmetadata = 4
 
 padBytestring :: Int -> ByteString
 padBytestring n = 
-  Prelude.foldl (<>) Data.ByteString.empty (Prelude.replicate n (encode '\NUL'))
+  P.foldl (<>) Data.ByteString.empty (P.replicate n (encode '\NUL'))
 
 padMemoryBlock :: Int -> Int -> ByteString
 padMemoryBlock rowsize rowcount = 
@@ -144,23 +148,38 @@ createBlocks :: Schema -> [Row] -> Maybe [ByteString]
 createBlocks schema [] = Just []
 createBlocks schema xs = 
   let size          = rowsize schema
+      len           = P.length xs
+      nrRowsToEncode  = min maxAmount len
       maxAmount     = (blocksize - pointersize - blockmetadata) `div` size 
-      rowsInBlock   = encodeInt (fromIntegral maxAmount)
-      bsMaybe       = encodeMB schema (Prelude.take maxAmount xs)
-      remainingRows = Prelude.drop maxAmount xs
+      rowsInBlock   = encodeInt (fromIntegral nrRowsToEncode)
+      bsMaybe       = encodeMB schema (P.take nrRowsToEncode xs)
+      remainingRows = P.drop nrRowsToEncode xs
   in do
     bs <- bsMaybe
-    let block = rowsInBlock <> bs <> padMemoryBlock size maxAmount
+    let block = rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
     
     (:) <$> Just block <*> createBlocks schema remainingRows
     -- rest <- createBlocks schema remainingRows
     -- Just $ paddedBs : rest
 
+
+addPointer :: Int32 -> ByteString -> ByteString
+addPointer p = (<> encodeInt p)
+
+readBlock :: Schema -> ByteString -> ([Row], Int32)
+readBlock schema = 
+  evalState ((,) <$> (decodeInt >>= decodeRows schema) <*> decodePointer)
+  
+
+
+
+testschema = [SInt32, SVarchar 10] 
   
 test6 = 
-  createBlocks 
-    [SInt32, SVarchar 7] 
-    [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
+  createBlocks testschema [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
+  & fromJust 
+  & P.map (addPointer 5)
+  & P.map (readBlock testschema)
 
 
 -- test6 = undefined
