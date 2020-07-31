@@ -29,6 +29,7 @@ library
   exposed-modules:
       Decoder
       Encoder
+      Hashtable
       Lib
       MemoryBlock
       Schema
