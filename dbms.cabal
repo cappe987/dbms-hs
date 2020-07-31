@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a636e2a1af6134ccfba970956d226c27dd43309e8d6bd3fbe13af2116127112b
+-- hash: bac7856b645666e081f95ee191f08a5fb48adf7d85eccee64e1fd4a1fa2889fa
 
 name:           dbms
 version:        0.1.0.0
@@ -39,7 +39,8 @@ library
   build-depends:
       base >=4.7 && <5
     , bytestring
-    , cereal
+    , cereal ==0.5.8.1
+    , hashable ==1.3.0.0
     , transformers
   default-language: Haskell2010
 
@@ -53,8 +54,9 @@ executable dbms-exe
   build-depends:
       base >=4.7 && <5
     , bytestring
-    , cereal
+    , cereal ==0.5.8.1
     , dbms
+    , hashable ==1.3.0.0
     , transformers
   default-language: Haskell2010
 
@@ -69,7 +71,8 @@ test-suite dbms-test
   build-depends:
       base >=4.7 && <5
     , bytestring
-    , cereal
+    , cereal ==0.5.8.1
     , dbms
+    , hashable ==1.3.0.0
     , transformers
   default-language: Haskell2010
