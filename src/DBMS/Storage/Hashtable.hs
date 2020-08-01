@@ -59,6 +59,7 @@ createTable details = do
 -- data HashTable = []
 
 -- Returns the actual position that the hashindex corresponds to
+-- Fetching the index requires opening of the table's file
 getActualPosition :: TableDetails -> Int32 -> IO Int32
 getActualPosition details hash = do
   let index      = hash `mod` primesize details
@@ -76,7 +77,8 @@ getActualPosition details hash = do
   let (rows, _)    = decodeBlock dbschema bs
       row          = P.dropWhile (\[RInt32 hash, RInt32 _] -> hash == index) rows
       (RInt32 res) = (\[_,x] -> x) $ P.head row
-  print rows
+  -- print rows
+  hClose hdl
   return res
 
 getIndexByValue :: TableDetails -> RowValue -> IO Int32

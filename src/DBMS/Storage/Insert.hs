@@ -76,10 +76,11 @@ findOrMakeBlock details hdl row index = do
 insertRow :: TableDetails -> Row -> IO Bool
 insertRow details row = do 
   let bsrow = encodeRow (schema details) row 
+  actualindex <- getIndex details row
+
   hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
 
   -- Create a new block at the end if `actualindex` is 0
-  actualindex <- getIndex details row
 
   result <- findOrMakeBlock details hdl row actualindex
 
