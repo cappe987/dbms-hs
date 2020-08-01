@@ -1,23 +1,34 @@
 module Main where
 
 import Lib
-import MemoryBlock
+-- import MemoryBlock
 import Schema
 import Hashtable
+import Encoder
 
 import System.IO
+import Data.ByteString
+
+testschema = [SInt32, SVarchar 10]
+testrow    = [RInt32 0, RString "Hello"]
+testrow2   = [RInt32 11, RString "World"]
+details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 main :: IO ()
 main = do
-  writeFile "test.bin" "\NUL\NUL\NUL\NUL"
+  -- writeFile "test.bin" "\NUL\NUL\NUL\NUL"
+  -- This is a temporary solution to handling the first insertion
+  -- Will later be handled using hashtable
+  Data.ByteString.writeFile "test.bin" $ encodeBlock details [testrow] 0
   hdl <- openFile "test.bin" ReadWriteMode
   hClose hdl
 
 
-  let testschema = [SInt32, SVarchar 10]
-      testrow    = [RInt32 0, RString "Hello"]
-
-  res <- insertRow (TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}) testrow
+  res <- insertRow details testrow2
+  res <- insertRow details testrow2
+  res <- insertRow details testrow2
+  res <- insertRow details testrow2
+  res <- insertRow details testrow2
 
   print res
 

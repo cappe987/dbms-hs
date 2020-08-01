@@ -69,8 +69,8 @@ padMemoryBlock rowsize rowcount =
 -- Creates block without the 4 pointer bytes at the end
 -- Ignores any rows that don't fit
 -- Maybe make it return a list of the rows that didn't fit?
-encodeBlock :: TableDetails -> [Row] -> ByteString
-encodeBlock details rows = 
+encodeBlockNoPointer :: TableDetails -> [Row] -> ByteString
+encodeBlockNoPointer details rows = 
   let size           = rowsize details
       len            = P.length rows
       maxAmount      = actualsize `div` size 
@@ -80,9 +80,9 @@ encodeBlock details rows =
   in rowsInBlock <> bs <> padMemoryBlock size nrRowsToEncode
 
 -- Ignores any rows that don't fit
-encodeBlockWPointer :: TableDetails -> [Row] -> Int32 -> ByteString
-encodeBlockWPointer details rows pointer = 
-  encodeBlock details rows <> encodeInt pointer
+encodeBlock :: TableDetails -> [Row] -> Int32 -> ByteString
+encodeBlock details rows pointer = 
+  encodeBlockNoPointer details rows <> encodeInt pointer
 
 
 

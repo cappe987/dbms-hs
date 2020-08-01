@@ -48,25 +48,26 @@ appendRow :: TableDetails -> ByteString -> Row -> ByteString
 appendRow details orig row = 
   let (rows, pointer) = decodeBlock (schema details) orig
       -- newrow          = evalState (decodeRow schema) row
-  in encodeBlock details (rows ++ [row]) <> encodeInt pointer
+  in encodeBlock details (rows ++ [row]) pointer
 
 -- Adds a pointer to a block that doesn't have one. 
 addPointer :: Int32 -> ByteString -> ByteString
 addPointer p = (<> encodeInt p)
 
 -- Updates the pointer at the end of a block bytestring
-replacePointer :: Int -> ByteString -> ByteString
+replacePointer :: Int32 -> ByteString -> ByteString
 replacePointer p bs = 
   C8.reverse bs
-  & C8.drop pointersize
+  & C8.drop (fromIntegral pointersize)
   & C8.reverse
   & (<> encodeInt (fromIntegral p))
 
-getPointer :: ByteString -> Int
-getPointer = fromIntegral . evalState decodePointer
+getPointer :: ByteString -> Int32
+-- getPointer = fromIntegral . evalState decodePointer
+getPointer = evalState decodePointer
 
 getBlockRowcount :: ByteString -> Int
-getBlockRowcount = fromIntegral . evalState decodePointer 
+getBlockRowcount = fromIntegral . evalState decodeInt 
 
 
 
