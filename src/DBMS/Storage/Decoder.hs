@@ -1,4 +1,4 @@
-module Decoder where
+module DBMS.Storage.Decoder where
 
 
 import Data.ByteString
@@ -9,7 +9,7 @@ import Data.Either
 
 import Control.Monad.Trans.State as ST
 
-import Schema
+import DBMS.Storage.Schema
 
 
 -- What about the Either from Serialize.decode? Ignore it for now?

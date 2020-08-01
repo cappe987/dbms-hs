@@ -1,4 +1,4 @@
-module MemoryBlock where 
+module DBMS.Storage.MemoryBlock where 
 
 import Prelude as P
 import Data.ByteString
@@ -10,10 +10,10 @@ import Data.Function
 -- import Data.Either
 import Data.Maybe
 
-import Schema
-import Encoder
-import Decoder
-import Constants
+import DBMS.Storage.Schema
+import DBMS.Storage.Encoder
+import DBMS.Storage.Decoder
+import DBMS.Storage.Constants
 -- import System.IO
 
 

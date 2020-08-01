@@ -1,4 +1,4 @@
-module Constants where
+module DBMS.Storage.Constants where
 
 import Data.Int
 
@@ -6,6 +6,10 @@ import Data.Int
 intMax :: Int32
 intMax = 2147483647
 
+
+
+nullpointer :: Int32
+nullpointer = 0
 
 -- Size of a block on disk
 blocksize :: Int

@@ -1,4 +1,4 @@
-module Encoder where
+module DBMS.Storage.Encoder where
 
 import Prelude as P
 import Data.ByteString
@@ -6,8 +6,8 @@ import Data.ByteString.Char8 as C8
 import Data.Serialize
 import Data.Int
 
-import Schema
-import Constants
+import DBMS.Storage.Schema
+import DBMS.Storage.Constants
 
 encodeString :: String -> ByteString
 encodeString = C8.pack

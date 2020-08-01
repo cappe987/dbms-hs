@@ -1,4 +1,4 @@
-module Schema where
+module DBMS.Storage.Schema where
 
 import Prelude as P
 import Data.Int

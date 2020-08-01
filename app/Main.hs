@@ -2,9 +2,10 @@ module Main where
 
 import Lib
 -- import MemoryBlock
-import Schema
-import Hashtable
-import Encoder
+import DBMS.Storage.Schema
+import DBMS.Storage.Encoder
+import DBMS.Storage.Hashtable
+import DBMS.Storage.Insert
 
 import System.IO
 import Data.ByteString
