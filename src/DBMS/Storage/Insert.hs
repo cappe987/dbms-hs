@@ -76,13 +76,12 @@ findOrMakeBlock details hdl row index = do
 insertRow :: TableDetails -> Row -> IO Bool
 insertRow details row = do 
   let bsrow = encodeRow (schema details) row 
-  -- print "ROW BEING INSERTED"
-  -- print bsrow
   hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
-  -- Remove the first fromIntgral when using `getActualPosition`
-  let hashindex = fromIntegral $ hash (getPK (schema details) row) `mod` fromIntegral (primesize details)
 
-  result <- findOrMakeBlock details hdl row hashindex
+  -- Create a new block at the end if `actualindex` is 0
+  actualindex <- getIndex details row
+
+  result <- findOrMakeBlock details hdl row actualindex
 
   hClose hdl
   return True

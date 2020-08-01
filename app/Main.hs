@@ -20,21 +20,24 @@ main = do
   -- writeFile "test.bin" "\NUL\NUL\NUL\NUL"
   -- This is a temporary solution to handling the first insertion
   -- Will later be handled using hashtable
-  Data.ByteString.writeFile "test.bin" $ encodeBlock details [testrow] 0
-  hdl <- openFile "test.bin" ReadWriteMode
-  hClose hdl
+  -- Data.ByteString.writeFile "test.bin" $ encodeBlock details [testrow] 0
+  -- hdl <- openFile "test.bin" ReadWriteMode
+  -- hClose hdl
 
 
-  res <- insertRow details testrow2
-  res <- insertRow details testrow2
-  res <- insertRow details testrow2
-  res <- insertRow details testrow2
-  res <- insertRow details testrow2
+  -- res <- insertRow details testrow2
+  -- res <- insertRow details testrow2
+  -- res <- insertRow details testrow2
+  -- res <- insertRow details testrow2
+  -- res <- insertRow details testrow2
+
+
+  -- createTable details
+
+
+  res <- getActualPosition details 6
 
   print res
-
-
-
   -- hClose hdl
 
 
