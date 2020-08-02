@@ -9,6 +9,7 @@ import Data.Int
 import DBMS.Storage.Schema
 import DBMS.Storage.Constants
 
+-- Documentation says C8.pack can be a bottleneck
 encodeString :: String -> ByteString
 encodeString = C8.pack
 

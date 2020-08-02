@@ -4,12 +4,11 @@ import Prelude as P
 import System.IO
 
 import Data.ByteString
-import Data.ByteString.Char8 as C8
+-- import Data.ByteString.Char8 as C8
 import Data.Int
 import Data.Function
 import Data.Hashable
 
-import Control.Monad.Trans.State as ST
 
 import DBMS.Storage.Schema
 import DBMS.Storage.Encoder

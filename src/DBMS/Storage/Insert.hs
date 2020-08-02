@@ -4,12 +4,11 @@ import Prelude as P
 import System.IO
 
 import Data.ByteString
-import Data.ByteString.Char8 as C8
+-- import Data.ByteString.Char8 as C8
 import Data.Int
-import Data.Function
-import Data.Hashable
+-- import Data.Function
+-- import Data.Hashable
 
-import Control.Monad.Trans.State as ST
 
 import DBMS.Storage.Schema
 import DBMS.Storage.Encoder
@@ -80,7 +79,10 @@ insertRow details row = do
 
   hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
 
-  -- Create a new block at the end if `actualindex` is 0
+  -- if actualindex == 0 then
+    -- create a new block at the end
+    -- Can open in only WriteMode in that case
+  -- else
 
   result <- findOrMakeBlock details hdl row actualindex
 

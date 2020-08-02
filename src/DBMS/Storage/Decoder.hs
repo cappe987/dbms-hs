@@ -1,4 +1,12 @@
-module DBMS.Storage.Decoder where
+module DBMS.Storage.Decoder 
+  ( decodeInt
+  , decodeVarchar
+  , decodeRow
+  , decodeRows
+  , decodeBlock 
+  , getPointer)
+  
+  where
 
 
 import Data.ByteString
@@ -14,9 +22,11 @@ import DBMS.Storage.Schema
 
 -- What about the Either from Serialize.decode? Ignore it for now?
 
--- decodeInt :: ByteString -> Maybe (Int32, ByteString)
-decodeInt :: State ByteString Int32
-decodeInt = do
+
+-- Type parsers
+
+parseInt :: State ByteString Int32
+parseInt = do
   bs <- ST.get
   let int = decode $ C8.take 4 bs
       res = fromRight 0 int :: Int32
@@ -24,39 +34,43 @@ decodeInt = do
 
   return res
 
-
-
-decodeAppendChar :: String -> State ByteString String
-decodeAppendChar s = do
+parseAppendChar :: String -> State ByteString String
+parseAppendChar s = do
   bs <- ST.get
   let res = decode bs :: Either String Char
       c = fromRight '\NUL' res
   ST.put $ Data.ByteString.drop 1 bs
   return $ c:s
 
-decodeVarcharLoop :: Int -> String -> State ByteString String
-decodeVarcharLoop 0   s = return $ Prelude.reverse s
-decodeVarcharLoop len s = 
-  decodeAppendChar s >>= decodeVarcharLoop (len-1)
+parseVarcharLoop :: Int -> String -> State ByteString String
+parseVarcharLoop 0   s = return $ Prelude.reverse s
+parseVarcharLoop len s = 
+  parseAppendChar s >>= parseVarcharLoop (len-1)
 
-decodeVarchar :: Int -> State ByteString String
-decodeVarchar n = decodeVarcharLoop n ""
-
-
-
-getDecoder :: SchemaType -> State ByteString RowValue
-getDecoder SInt32       = RInt32  <$> decodeInt
-getDecoder (SVarchar n) = RString <$> decodeVarchar n
+parseVarchar :: Int -> State ByteString String
+parseVarchar n = parseVarcharLoop n ""
 
 
 
--- decodeRow :: Schema -> ByteString -> Row
-decodeRow :: Schema -> State ByteString Row
-decodeRow ss = 
-  let decoders = getDecoder <$> ss
+-- Get parser for matching schema
+getParser :: SchemaType -> State ByteString RowValue
+getParser SInt32       = RInt32  <$> parseInt
+getParser (SVarchar n) = RString <$> parseVarchar n
+
+
+
+
+
+-- Parsing more advanced data
+
+parseRow :: Schema -> State ByteString Row
+parseRow ss = 
+  let decoders = getParser <$> ss
       rowdecoder = sequenceA decoders :: State ByteString Row
   -- in evalState rowdecoder bs
   in rowdecoder
+
+
 
 -- Removes padding for when the last row didn't quite take up all 
 -- the bytes in the block, or if it's the last in the block.
@@ -65,25 +79,42 @@ removePaddingToPointer xs
   | C8.length xs < 4 = undefined
   | otherwise = C8.reverse $ C8.take 4 $ C8.reverse xs
 
-
-decodePointer :: State ByteString Int32
-decodePointer = do 
+parsePointer :: State ByteString Int32
+parsePointer = do 
   bs <- ST.get
   let pointerBytes = removePaddingToPointer bs
   ST.put pointerBytes
-  decodeInt
+  parseInt
 
 
 
-decodeRows :: Schema -> Int32 -> State ByteString [Row]
-decodeRows schema 0 = return []
-decodeRows schema n = do 
+parseRows :: Schema -> Int32 -> State ByteString [Row]
+parseRows schema 0 = return []
+parseRows schema n = do 
   bs  <- ST.get
-  row <- decodeRow schema
+  row <- parseRow schema
 
-  (:) <$> return row <*> decodeRows schema (n-1)
+  (:) <$> return row <*> parseRows schema (n-1)
 
+
+
+-- Public decoders
+
+decodeInt :: ByteString -> Int32
+decodeInt = evalState parseInt
+
+decodeVarchar :: Int -> ByteString -> String
+decodeVarchar n = evalState (parseVarchar n)
+
+getPointer :: ByteString -> Int32
+getPointer = evalState parsePointer
+
+decodeRow :: Schema -> ByteString -> Row
+decodeRow schema = evalState (parseRow schema)
+
+decodeRows :: Schema -> Int32 -> ByteString -> [Row]
+decodeRows schema n = evalState (parseRows schema n)
 
 decodeBlock :: Schema -> ByteString -> ([Row], Int32)
 decodeBlock schema = 
-  evalState ((,) <$> (decodeInt >>= decodeRows schema) <*> decodePointer)
+  evalState ((,) <$> (parseInt >>= parseRows schema) <*> parsePointer)

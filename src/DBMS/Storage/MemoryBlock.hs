@@ -5,7 +5,6 @@ import Data.ByteString
 import Data.ByteString.Char8 as C8
 import Data.Serialize
 import Data.Int
-import Control.Monad.Trans.State as ST
 import Data.Function
 -- import Data.Either
 import Data.Maybe
@@ -62,33 +61,37 @@ replacePointer p bs =
   & C8.reverse
   & (<> encodeInt (fromIntegral p))
 
-getPointer :: ByteString -> Int32
--- getPointer = fromIntegral . evalState decodePointer
-getPointer = evalState decodePointer
+
+-- getPointer :: ByteString -> Int32
+-- getPointer = decodeInt . removePaddingToPointer
+
+
+-- -- getPointer = fromIntegral . evalState decodePointer
+-- getPointer = evalState decodePointer
 
 getBlockRowcount :: ByteString -> Int
-getBlockRowcount = fromIntegral . evalState decodeInt 
+getBlockRowcount = fromIntegral . decodeInt
 
 
 
 -- Testing functions
 
-testschema = [SInt32, SVarchar 10] 
+-- testschema = [SInt32, SVarchar 10] 
 
-test2 = 
-  let x = encode (5 :: Int32) <> encodeString "Hello"
-  in evalState ((,) <$> decodeInt <*> decodeVarchar 5) x
+-- test2 = 
+--   let x = encode (5 :: Int32) <> encodeString "Hello"
+--   in evalState ((,) <$> parseInt <*> parseVarchar 5) x
 
-test3 = 
-  let x = encodeString "HelloWorld"
-  in evalState (decodeVarchar 5) x
+-- test3 = 
+--   let x = encodeString "HelloWorld"
+--   in evalState (parseVarchar 5) x
 
 
-test4 = C8.writeFile "test.bin" (encodeString "HelloWorld")
-test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
+-- test4 = C8.writeFile "test.bin" (encodeString "HelloWorld")
+-- test5 = C8.writeFile "test.bin" (encode (65 :: Int32))
   
-test6 = 
-  createBlocks testschema [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
-  & P.map (addPointer 5)
-  & P.map (decodeBlock testschema)
+-- test6 = 
+--   createBlocks testschema [[RInt32 5, RString "Hello"], [RInt32 10, RString "World"]]
+--   & P.map (addPointer 5)
+--   & P.map (decodeBlock testschema)
 
