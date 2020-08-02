@@ -63,6 +63,10 @@ getPositionInHashtable hashindex =
     & toInteger
 -- data HashTable = []
 
+
+hashPK :: TableDetails -> Row -> Int32
+hashPK details row = fromIntegral $ hash (getPK (schema details) row)
+
 -- Returns the actual position that the hashindex corresponds to
 -- Fetching the index requires opening of the table's file
 getActualPosition :: TableDetails -> Int32 -> IO Int32

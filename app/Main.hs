@@ -13,6 +13,8 @@ import Data.ByteString
 testschema = [SInt32, SVarchar 10]
 testrow    = [RInt32 0, RString "Hello"]
 testrow2   = [RInt32 11, RString "World"]
+testrow3   = [RInt32 1, RString "Greetings"]
+testrow4   = [RInt32 12, RString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 main :: IO ()
@@ -24,20 +26,20 @@ main = do
   -- hdl <- openFile "test.bin" ReadWriteMode
   -- hClose hdl
 
-
-  -- res <- insertRow details testrow2
-  -- res <- insertRow details testrow2
-  -- res <- insertRow details testrow2
-  -- res <- insertRow details testrow2
-  -- res <- insertRow details testrow2
-
-
   createTable details
+
+  res <- insertRow details testrow
+  res <- insertRow details testrow3
+  res <- insertRow details testrow2
+  res <- insertRow details testrow4
+  -- res <- insertRow details testrow2
+
+
 
 
   -- res <- getActualPosition details 6
   -- print res
-  setHashPosition details 7 2
+  -- setHashPosition details 7 2
   -- print res
   res <- getActualPosition details 7
   print res

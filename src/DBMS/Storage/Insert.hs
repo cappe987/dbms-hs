@@ -49,17 +49,11 @@ findOrMakeBlock details hdl row index = do
       -- Create new block and make the previous block point towards it.
       -- print "DOESN'T FIT"
 
-      hSeek hdl SeekFromEnd 0
-      end <- fromIntegral <$> hTell hdl :: IO Int
-      -- Index of the new block. End of the file 
-      let nextindex = fromIntegral $ end `div` blocksize 
-
-      -- hPut hdl $ P.head $ createBlocks (schema details) [newrow]
-      hPut hdl $ encodeBlock details [row] nullpointer
+      indexOfBlock <- createBlockAtEnd details hdl row
 
       -- Edit previous block pointer
       hSeek hdl AbsoluteSeek currblockindex -- Seeks back to previous block
-      hPut hdl (replacePointer nextindex bs) -- Updates pointer for previous block
+      hPut hdl (replacePointer indexOfBlock bs) -- Updates pointer for previous block
 
       return ()
 
@@ -68,23 +62,36 @@ findOrMakeBlock details hdl row index = do
     findOrMakeBlock details hdl row pointer
 
 
+-- Returns the new index
+createBlockAtEnd :: TableDetails -> Handle -> Row -> IO Int32
+createBlockAtEnd details hdl row = do
+  hSeek hdl SeekFromEnd 0
+  end <- fromIntegral <$> hTell hdl :: IO Int
+  -- Index of the new block. End of the file 
+
+  hPut hdl $ encodeBlock details [row] nullpointer
+
+  return $ fromIntegral $ end `div` blocksize 
 
 
 -- NOTE: Handle case when trying to append to empty block
 -- If lookup in hashtable fails. Create new block at the end of the file
 insertRow :: TableDetails -> Row -> IO Bool
 insertRow details row = do 
-  let bsrow = encodeRow (schema details) row 
+  let bsrow     = encodeRow (schema details) row 
+      hashvalue = hashPK details row
   actualindex <- getIndex details row
 
   hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
 
-  -- if actualindex == 0 then
+  if actualindex == 0 then do
     -- create a new block at the end
     -- Can open in only WriteMode in that case
-  -- else
+    newindex <- createBlockAtEnd details hdl row
+    hClose hdl
+    setHashPosition details hashvalue newindex
+  else do
+    findOrMakeBlock details hdl row actualindex
+    hClose hdl
 
-  result <- findOrMakeBlock details hdl row actualindex
-
-  hClose hdl
   return True
