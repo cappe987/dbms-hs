@@ -51,6 +51,6 @@ data TableDetails = TableDetails {
   , rowsize   :: Int
   , tablename :: String
   , primesize :: Int32
-}
+} deriving Show
 
 

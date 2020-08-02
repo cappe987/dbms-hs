@@ -32,12 +32,18 @@ main = do
   -- res <- insertRow details testrow2
 
 
-  -- createTable details
+  createTable details
 
 
-  res <- getActualPosition details 6
-
+  -- res <- getActualPosition details 6
+  -- print res
+  setHashPosition details 7 2
+  -- print res
+  res <- getActualPosition details 7
   print res
+
+
+
   -- hClose hdl
 
 
