@@ -11,6 +11,7 @@ import Data.Int
 
 
 import DBMS.Schema.Types
+import DBMS.Schema.Information
 import DBMS.Storage.Encoder
 import DBMS.Storage.Decoder
 import DBMS.Storage.MemoryBlock
@@ -76,11 +77,15 @@ createBlockAtEnd details hdl row = do
 
 -- NOTE: Handle case when trying to append to empty block
 -- If lookup in hashtable fails. Create new block at the end of the file
-insertRow :: TableDetails -> Row -> IO Bool
-insertRow details row = do 
-  let bsrow     = encodeRow (schema details) row 
-      hashvalue = hashPK details row
-  actualindex <- getIndex details row
+-- On parsing the row, map it to a RowsWithName
+-- insertRow :: TableDetails -> RowWithName -> IO Bool
+insertRow :: TableDetails -> RowWithNames -> IO Bool
+insertRow details rowWithNames = do 
+  let row       = removeColNames rowWithNames
+      bsrow     = encodeRow (schema details) row
+      hashvalue = hashPK details rowWithNames
+
+  actualindex <- getIndex details rowWithNames
 
   hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
 

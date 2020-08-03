@@ -29,7 +29,7 @@ encodeInt :: Int32 -> ByteString
 encodeInt = encode
 
 
-encodeRowValue :: Column -> RowValue -> ByteString
+encodeRowValue :: Column -> ColValue -> ByteString
 encodeRowValue Column{typeof=SInt32    } (RInt32 d) = encodeInt d
 encodeRowValue Column{typeof=SVarchar n} (RString s) = encodeVarchar n s
 encodeRowValue _ _ = undefined --fail "Handle this earlier in the process"

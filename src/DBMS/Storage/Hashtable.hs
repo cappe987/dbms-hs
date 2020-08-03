@@ -68,7 +68,7 @@ getPositionInHashtable hashindex =
 -- data HashTable = []
 
 
-hashPK :: TableDetails -> Row -> Int32
+hashPK :: TableDetails -> RowWithNames -> Int32
 hashPK details row = fromIntegral $ hash (getPK (schema details) row)
 
 -- Returns the actual position that the hashindex corresponds to
@@ -91,11 +91,11 @@ getActualPosition details hash = do
   hClose hdl
   return res
 
-getIndexByValue :: TableDetails -> RowValue -> IO Int32
+getIndexByValue :: TableDetails -> ColValue -> IO Int32
 getIndexByValue details value = 
   getActualPosition details (fromIntegral $ hash value)
   
-getIndex :: TableDetails -> Row -> IO Int32
+getIndex :: TableDetails -> RowWithNames -> IO Int32
 getIndex details row = 
   getIndexByValue details (getPK (schema details) row)
 

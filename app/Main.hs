@@ -15,11 +15,17 @@ testschema = [
     Column{typeof=SInt32     , info=ColumnInfo{name="user_id" , properties=[PrimaryKey]}}
   , Column{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[          ]}}
   ]
-testrow    = [RInt32 0, RString "Hello"]
+testrow    = [ColWithName{colname="user_id", value=RInt32 0}, 
+              ColWithName{colname="username", value=RString "Hello"}]
 testrow2   = [RInt32 11, RString "World"]
 testrow3   = [RInt32 1, RString "Greetings"]
 testrow4   = [RInt32 12, RString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
+
+testrow5   = [
+              ColWithName{colname="username", value=RString "Heyo"},
+              ColWithName{colname="user_id" , value=RInt32 2}
+            ]
 
 main :: IO ()
 main = do
@@ -33,9 +39,9 @@ main = do
   createTable details
 
   res <- insertRow details testrow
-  res <- insertRow details testrow3
-  res <- insertRow details testrow2
-  res <- insertRow details testrow4
+  res <- insertRow details testrow5
+  -- res <- insertRow details testrow2
+  -- res <- insertRow details testrow4
   -- res <- insertRow details testrow2
 
 

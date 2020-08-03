@@ -53,7 +53,7 @@ parseVarchar n = parseVarcharLoop n ""
 
 
 -- Get parser for matching schema
-getParser :: Column -> State ByteString RowValue
+getParser :: Column -> State ByteString ColValue
 getParser Column{typeof=SInt32    } = RInt32   <$> parseInt
 getParser Column{typeof=SVarchar n} = RString  <$> parseVarchar n
 
