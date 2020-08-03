@@ -9,7 +9,7 @@ import Data.Function
 -- import Data.Either
 import Data.Maybe
 
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
 import DBMS.Storage.Encoder
 import DBMS.Storage.Decoder
 import DBMS.Storage.Constants
@@ -69,8 +69,8 @@ replacePointer p bs =
 -- -- getPointer = fromIntegral . evalState decodePointer
 -- getPointer = evalState decodePointer
 
-getBlockRowcount :: ByteString -> Int
-getBlockRowcount = fromIntegral . decodeInt
+getBlockRowcount :: ByteString -> Int32
+getBlockRowcount = decodeInt
 
 
 

@@ -17,7 +17,7 @@ import Data.Either
 
 import Control.Monad.Trans.State as ST
 
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
 
 
 -- What about the Either from Serialize.decode? Ignore it for now?
@@ -42,20 +42,20 @@ parseAppendChar s = do
   ST.put $ Data.ByteString.drop 1 bs
   return $ c:s
 
-parseVarcharLoop :: Int -> String -> State ByteString String
+parseVarcharLoop :: Int32 -> String -> State ByteString String
 parseVarcharLoop 0   s = return $ Prelude.reverse s
 parseVarcharLoop len s = 
   parseAppendChar s >>= parseVarcharLoop (len-1)
 
-parseVarchar :: Int -> State ByteString String
+parseVarchar :: Int32 -> State ByteString String
 parseVarchar n = parseVarcharLoop n ""
 
 
 
 -- Get parser for matching schema
-getParser :: SchemaType -> State ByteString RowValue
-getParser SInt32       = RInt32  <$> parseInt
-getParser (SVarchar n) = RString <$> parseVarchar n
+getParser :: Column -> State ByteString RowValue
+getParser Column{typeof=SInt32    } = RInt32   <$> parseInt
+getParser Column{typeof=SVarchar n} = RString  <$> parseVarchar n
 
 
 
@@ -103,7 +103,7 @@ parseRows schema n = do
 decodeInt :: ByteString -> Int32
 decodeInt = evalState parseInt
 
-decodeVarchar :: Int -> ByteString -> String
+decodeVarchar :: Int32 -> ByteString -> String
 decodeVarchar n = evalState (parseVarchar n)
 
 getPointer :: ByteString -> Int32

@@ -10,7 +10,7 @@ import Data.Int
 -- import Data.Hashable
 
 
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
 import DBMS.Storage.Encoder
 import DBMS.Storage.Decoder
 import DBMS.Storage.MemoryBlock
@@ -18,7 +18,7 @@ import DBMS.Storage.Constants
 import DBMS.Storage.Hashtable
 
 -- Calculates if one more row fits in the current block
-fitsInBlock :: Int -> Int -> Bool
+fitsInBlock :: Int32 -> Int32 -> Bool
 fitsInBlock schemasize amount = 
   fromIntegral actualsize - (schemasize * amount) > schemasize
 

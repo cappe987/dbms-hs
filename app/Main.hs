@@ -2,7 +2,8 @@ module Main where
 
 import Lib
 -- import MemoryBlock
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
+import DBMS.Schema.Information
 import DBMS.Storage.Encoder
 import DBMS.Storage.Hashtable
 import DBMS.Storage.Insert
@@ -10,7 +11,10 @@ import DBMS.Storage.Insert
 import System.IO
 import Data.ByteString
 
-testschema = [SInt32, SVarchar 10]
+testschema = [
+    Column{typeof=SInt32     , info=ColumnInfo{name="user_id" , properties=[PrimaryKey]}}
+  , Column{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[          ]}}
+  ]
 testrow    = [RInt32 0, RString "Hello"]
 testrow2   = [RInt32 11, RString "World"]
 testrow3   = [RInt32 1, RString "Greetings"]

@@ -10,7 +10,8 @@ import Data.Function
 import Data.Hashable
 
 
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
+import DBMS.Schema.Information
 import DBMS.Storage.Encoder
 import DBMS.Storage.Decoder
 import DBMS.Storage.MemoryBlock
@@ -33,7 +34,10 @@ primes = [11, 37, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 
 
 
 htableschema :: Schema
-htableschema = [SInt32, SInt32]
+htableschema = [
+    Column{typeof=SInt32, info=ColumnInfo{name="hashindex"   , properties=[PrimaryKey]}}
+  , Column{typeof=SInt32, info=ColumnInfo{name="blockpointer", properties=[]          }}
+  ]
 
 htableRowsize :: Int32
 htableRowsize = fromIntegral $ getRowsize htableschema

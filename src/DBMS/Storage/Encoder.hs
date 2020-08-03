@@ -6,19 +6,20 @@ import Data.ByteString.Char8 as C8
 import Data.Serialize
 import Data.Int
 
-import DBMS.Storage.Schema
+import DBMS.Schema.Types
+import DBMS.Schema.Information
 import DBMS.Storage.Constants
 
 -- Documentation says C8.pack can be a bottleneck
 encodeString :: String -> ByteString
 encodeString = C8.pack
 
-encodeVarchar :: Int -> String -> ByteString
+encodeVarchar :: Int32 -> String -> ByteString
 encodeVarchar n s = encodeString (fill $ P.reverse s)
-  where len = P.length
+  where len  s = fromIntegral $ P.length s
         fill s
           | len s < n = fill ('\NUL':s)
-          | len s > n = P.reverse $ P.drop (len s - n) s
+          | len s > n = P.reverse $ P.drop (fromIntegral $ len s - n) s
           | otherwise = P.reverse s
     
 
@@ -28,9 +29,9 @@ encodeInt :: Int32 -> ByteString
 encodeInt = encode
 
 
-encodeRowValue :: SchemaType -> RowValue -> ByteString
-encodeRowValue SInt32       (RInt32  d) = encodeInt d
-encodeRowValue (SVarchar n) (RString s) = encodeVarchar n s
+encodeRowValue :: Column -> RowValue -> ByteString
+encodeRowValue Column{typeof=SInt32    } (RInt32 d) = encodeInt d
+encodeRowValue Column{typeof=SVarchar n} (RString s) = encodeVarchar n s
 encodeRowValue _ _ = undefined --fail "Handle this earlier in the process"
 
 -- Maybe add error messages here, for when the schema doesn't match input.
@@ -72,7 +73,7 @@ padMemoryBlock rowsize rowcount =
 -- Maybe make it return a list of the rows that didn't fit?
 encodeBlockNoPointer :: TableDetails -> [Row] -> ByteString
 encodeBlockNoPointer details rows = 
-  let size           = rowsize details
+  let size           = fromIntegral $ rowsize details
       len            = P.length rows
       maxAmount      = actualsize `div` size 
       nrRowsToEncode = min maxAmount len
@@ -96,7 +97,7 @@ encodeBlock details rows pointer =
 createBlocks :: Schema -> [Row] -> [ByteString]
 createBlocks schema [] = []
 createBlocks schema xs = 
-  let size           = getRowsize schema
+  let size           = fromIntegral $ getRowsize schema
       len            = P.length xs
       maxAmount      = (blocksize - pointersize - blockmetadata) `div` size 
       nrRowsToEncode = min maxAmount len
