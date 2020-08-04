@@ -16,18 +16,18 @@ testschema = [
   , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[          ]}}
   ]
 testrow    = VerifiedRow [
-              ColWithName{colname="user_id", value=RInt32 0}, 
-              ColWithName{colname="username", value=RString "Hello"}
+              NamedColValue{colname="user_id", value=RInt32 0}, 
+              NamedColValue{colname="username", value=RString "Hello"}
             ]
-            
+
 testrow2   = [RInt32 11, RString "World"]
 testrow3   = [RInt32 1, RString "Greetings"]
 testrow4   = [RInt32 12, RString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 testrow5   = VerifiedRow [
-              ColWithName{colname="user_id" , value=RInt32 2},
-              ColWithName{colname="username", value=RString "Heyo"}
+              NamedColValue{colname="user_id" , value=RInt32 2},
+              NamedColValue{colname="username", value=RString "Heyo"}
             ]
 
 main :: IO ()

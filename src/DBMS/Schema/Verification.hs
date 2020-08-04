@@ -22,7 +22,7 @@ getPKColumn schema =
     xs  -> fail ("Too many pk: " ++ show xs ++ " in schema " ++ show schema)
 
 
-getColByName :: NamedRow r => String -> r -> Maybe ColWithName
+getColByName :: NamedRow r => String -> r -> Maybe NamedColValue
 getColByName s row = 
   case filter ((== s) . colname) (unwrap row) of
     []  -> Nothing
@@ -30,20 +30,20 @@ getColByName s row =
     xs  -> fail ("Multiple columns with same name: " ++ show xs)
 
 
-getNamedColumn :: NamedRow r => ColumnSchema -> r -> Maybe ColWithName
+getNamedColumn :: NamedRow r => ColumnSchema -> r -> Maybe NamedColValue
 getNamedColumn col = getColByName (name $ info col) 
 
 
 
 
-tryGetPK :: Schema -> UnverifiedRow -> Maybe ColWithName
+tryGetPK :: Schema -> UnverifiedRow -> Maybe NamedColValue
 tryGetPK schema row = 
   getPKColumn schema >>= flip getNamedColumn row
 
 hasPK :: Schema -> UnverifiedRow -> Bool
 hasPK schema row = isJust $ tryGetPK schema row
 
-getPK :: Schema -> VerifiedRow -> ColWithName
+getPK :: Schema -> VerifiedRow -> NamedColValue
 getPK schema (VerifiedRow row) = 
   fromJust $ tryGetPK schema (UnverifiedRow row)
 

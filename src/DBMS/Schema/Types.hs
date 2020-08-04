@@ -27,12 +27,12 @@ instance Hashable ColValue where
 
 type Row = [ColValue]
 
-data ColWithName = ColWithName {
+data NamedColValue = NamedColValue {
     colname  :: String
   , value    :: ColValue
   } deriving Show
 
-type RowWithNames = [ColWithName]
+type RowWithNames = [NamedColValue]
 
 
 
