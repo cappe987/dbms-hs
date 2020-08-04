@@ -16,4 +16,4 @@ There are no plans to use this in any other real-world project.
 - [ ] Escape characters 
 - [ ] Remove the limit of `INT32_MAX` on block amount
 - [ ] Handle schemas with size larger than one block
-- [ ] Rewrite DBMS.Storage modules to directly manipulate 
+- [ ] Rewrite DBMS.Storage modules to directly manipulate bytestrings. https://wiki.haskell.org/Performance/Strings
