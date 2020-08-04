@@ -10,6 +10,7 @@ There are no plans to use this in any other real-world project.
 - [X] Implement hash table
 - [ ] Implement main db file for storing schemas. 
 - [ ] Check if PK exists when inserting row.
+- [ ] Handle NULL values
 
 ## Long term
 - [ ] Add rehashing to hashtables

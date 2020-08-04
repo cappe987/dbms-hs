@@ -53,9 +53,9 @@ parseVarchar n = parseVarcharLoop n ""
 
 
 -- Get parser for matching schema
-getParser :: Column -> State ByteString ColValue
-getParser Column{typeof=SInt32    } = RInt32   <$> parseInt
-getParser Column{typeof=SVarchar n} = RString  <$> parseVarchar n
+getParser :: ColumnSchema -> State ByteString ColValue
+getParser ColumnSchema{typeof=SInt32    } = RInt32   <$> parseInt
+getParser ColumnSchema{typeof=SVarchar n} = RString  <$> parseVarchar n
 
 
 

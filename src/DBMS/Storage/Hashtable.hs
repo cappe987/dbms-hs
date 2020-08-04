@@ -12,6 +12,7 @@ import Data.Hashable
 
 import DBMS.Schema.Types
 import DBMS.Schema.Information
+import DBMS.Schema.Verification
 import DBMS.Storage.Encoder
 import DBMS.Storage.Decoder
 import DBMS.Storage.MemoryBlock
@@ -35,8 +36,8 @@ primes = [11, 37, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 
 
 htableschema :: Schema
 htableschema = [
-    Column{typeof=SInt32, info=ColumnInfo{name="hashindex"   , properties=[PrimaryKey]}}
-  , Column{typeof=SInt32, info=ColumnInfo{name="blockpointer", properties=[]          }}
+    ColumnSchema{typeof=SInt32, info=ColumnInfo{name="hashindex"   , properties=[PrimaryKey]}}
+  , ColumnSchema{typeof=SInt32, info=ColumnInfo{name="blockpointer", properties=[]          }}
   ]
 
 htableRowsize :: Int32
@@ -68,8 +69,8 @@ getPositionInHashtable hashindex =
 -- data HashTable = []
 
 
-hashPK :: TableDetails -> RowWithNames -> Int32
-hashPK details row = fromIntegral $ hash (getPK (schema details) row)
+hashPK :: TableDetails -> VerifiedRow -> Int32
+hashPK details row = fromIntegral $ hash (value $ getPK (schema details) row)
 
 -- Returns the actual position that the hashindex corresponds to
 -- Fetching the index requires opening of the table's file
@@ -95,9 +96,9 @@ getIndexByValue :: TableDetails -> ColValue -> IO Int32
 getIndexByValue details value = 
   getActualPosition details (fromIntegral $ hash value)
   
-getIndex :: TableDetails -> RowWithNames -> IO Int32
+getIndex :: TableDetails -> VerifiedRow -> IO Int32
 getIndex details row = 
-  getIndexByValue details (getPK (schema details) row)
+  getIndexByValue details (value $ getPK (schema details) row)
 
 
 

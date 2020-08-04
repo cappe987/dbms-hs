@@ -73,7 +73,7 @@ createBlockAtEnd details hdl row = do
 -- If lookup in hashtable fails. Create new block at the end of the file
 -- On parsing the row, map it to a RowsWithName
 -- insertRow :: TableDetails -> RowWithName -> IO Bool
-insertRow :: TableDetails -> RowWithNames -> IO Bool
+insertRow :: TableDetails -> VerifiedRow -> IO Bool
 insertRow details rowWithNames = do 
   let row       = removeColNames rowWithNames
       bsrow     = encodeRow (schema details) row

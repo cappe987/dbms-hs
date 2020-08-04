@@ -30,7 +30,7 @@ type Row = [ColValue]
 data ColWithName = ColWithName {
     colname  :: String
   , value    :: ColValue
-  }
+  } deriving Show
 
 type RowWithNames = [ColWithName]
 
@@ -60,12 +60,12 @@ data DataTypes =
 
 
 -- The schema itself
-data Column = Column {
+data ColumnSchema = ColumnSchema {
       typeof :: DataTypes
     , info   :: ColumnInfo
   } deriving (Show)
 
-type Schema = [Column]
+type Schema = [ColumnSchema]
 
 
 
@@ -79,3 +79,23 @@ data TableDetails = TableDetails {
 } deriving Show
 
 
+-- Perhaps wrap Verified/Unverified into a typeclass for functions 
+-- that can take both.
+
+class NamedRow a where
+  unwrap :: a -> RowWithNames
+
+
+newtype UnverifiedRow = 
+  UnverifiedRow RowWithNames 
+  deriving Show
+
+newtype VerifiedRow   = 
+  VerifiedRow RowWithNames 
+  deriving Show
+
+instance NamedRow VerifiedRow where
+  unwrap (VerifiedRow row) = row
+
+instance NamedRow UnverifiedRow where
+  unwrap (UnverifiedRow row) = row
