@@ -23,32 +23,26 @@ fitsInBlock :: Int32 -> Int32 -> Bool
 fitsInBlock schemasize amount = 
   fromIntegral actualsize - (schemasize * amount) > schemasize
 
-findOrMakeBlock :: TableDetails -> Handle -> Row -> Int32 -> IO ()
+findOrMakeBlock :: TableDetails -> Handle -> Row -> Int32 -> IO Bool
 findOrMakeBlock details hdl row index = do
   let currblockindex = toInteger $ index * fromIntegral blocksize
   hSeek hdl AbsoluteSeek currblockindex
   bs <- hGet hdl blocksize -- Read block
   let pointer = getPointer bs
 
-  -- print "BYTESTRING:"
-  -- print bs
-  -- print "POINTER"
-  -- print pointer
+  -- Check if PK exists in this block, return false if it does.
 
   if pointer == nullpointer then 
 
     -- Doesn't point anywhere. Try to fit in this block.
-    -- print $ rowsize details 
-    -- print $ getBlockRowcount bs
     if fitsInBlock (rowsize details) (getBlockRowcount bs) then do
       -- return (index, Just bs <> encodeRow (schema details) row)
-      -- print "FITS. WRITE LINE:"
       hSeek hdl AbsoluteSeek currblockindex
       hPut hdl $ appendRow details bs row
+      return True
 
     else do
       -- Create new block and make the previous block point towards it.
-      -- print "DOESN'T FIT"
 
       indexOfBlock <- createBlockAtEnd details hdl row
 
@@ -56,7 +50,7 @@ findOrMakeBlock details hdl row index = do
       hSeek hdl AbsoluteSeek currblockindex -- Seeks back to previous block
       hPut hdl (replacePointer indexOfBlock bs) -- Updates pointer for previous block
 
-      return ()
+      return True
 
   else
     -- Points somewhere. Follow it.
@@ -87,16 +81,20 @@ insertRow details rowWithNames = do
 
   actualindex <- getIndex details rowWithNames
 
-  hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
-
   if actualindex == 0 then do
     -- create a new block at the end
     -- Can open in only WriteMode in that case
+    -- No need to check if PK exists
+    hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
     newindex <- createBlockAtEnd details hdl row
     hClose hdl
-    setHashPosition details hashvalue newindex
-  else do
-    findOrMakeBlock details hdl row actualindex
-    hClose hdl
 
-  return True
+    setHashPosition details hashvalue newindex
+    return True
+  else do
+    hdl <- openFile (tablename details ++ ".bin") ReadWriteMode 
+    -- Check if PK exists first.
+    res <- findOrMakeBlock details hdl row actualindex
+
+    hClose hdl
+    return res

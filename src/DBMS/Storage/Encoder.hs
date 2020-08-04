@@ -6,6 +6,8 @@ import Data.ByteString.Char8 as C8
 import Data.Serialize
 import Data.Int
 
+import Debug.Trace
+
 import DBMS.Schema.Types
 import DBMS.Schema.Information
 import DBMS.Storage.Constants
@@ -32,7 +34,7 @@ encodeInt = encode
 encodeRowValue :: Column -> ColValue -> ByteString
 encodeRowValue Column{typeof=SInt32    } (RInt32 d) = encodeInt d
 encodeRowValue Column{typeof=SVarchar n} (RString s) = encodeVarchar n s
-encodeRowValue _ _ = undefined --fail "Handle this earlier in the process"
+encodeRowValue a b = trace (show a ++ show b) undefined--fail "Handle this earlier in the process"
 
 -- Maybe add error messages here, for when the schema doesn't match input.
 -- But that should probably be checked earlier.

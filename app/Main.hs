@@ -23,8 +23,8 @@ testrow4   = [RInt32 12, RString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 testrow5   = [
-              ColWithName{colname="username", value=RString "Heyo"},
-              ColWithName{colname="user_id" , value=RInt32 2}
+              ColWithName{colname="user_id" , value=RInt32 2},
+              ColWithName{colname="username", value=RString "Heyo"}
             ]
 
 main :: IO ()
@@ -51,7 +51,7 @@ main = do
   -- print res
   -- setHashPosition details 7 2
   -- print res
-  res <- getActualPosition details 7
+  res <- getActualPosition details 2
   print res
 
 
