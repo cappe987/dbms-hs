@@ -51,7 +51,7 @@ createTable details = do
 
   hdl <- openFile (tablename details ++ ".bin") WriteMode
 
-  let keymap = P.map (\i -> [RInt32 i, RInt32 0]) [0..size] :: [Row]
+  let keymap = P.map (\i -> [RInt32 $ Just i, RInt32 $ Just 0]) [0..size] :: [Row]
       bss    = createBlocks htableschema keymap
       len    = fromIntegral $ P.length bss :: Int32
       blocks = 
@@ -86,8 +86,9 @@ getActualPosition details hash = do
   bs <- hGet hdl blocksize
 
   let (rows, _)    = decodeBlock htableschema bs
-      row          = P.dropWhile (\[RInt32 hash, RInt32 _] -> hash /= index) rows
-      (RInt32 res) = (\[_,x] -> x) $ P.head row
+      row          = P.dropWhile (\[RInt32 (Just hash), RInt32 _] -> hash /= index) rows
+      (RInt32 (Just res)) = (\[_,x] -> x) $ P.head row 
+      -- Result should alwas be RInt32 (Just res)
 
   hClose hdl
   return res
@@ -103,8 +104,8 @@ getIndex details row =
 
 
 updateHashpointer :: Int32 -> Int32 -> Row -> Row
-updateHashpointer index p xs@[RInt32 i, RInt32 _]
-  | i == index = [RInt32 i, RInt32 p]
+updateHashpointer index p xs@[RInt32 (Just i), RInt32 _]
+  | i == index = [RInt32 $ Just i, RInt32 $ Just p]
   | otherwise = xs
 
 

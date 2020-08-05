@@ -11,19 +11,23 @@ import Data.Hashable
 -- Maybe wrap ColValue in another type so reading can be done without
 -- assigning column names? Assign names once all the data has been read 
 -- and picked out, for better performance.
-data ColValue = 
-    RInt32  Int32
-  | RString String
-  deriving (Show, Eq)
 
+
+data ColValue = 
+    RInt32  (Maybe Int32)
+  | RString (Maybe String) 
+  deriving (Show, Eq)
+ 
 instance Hashable ColValue where
   -- hashWithSalt is not planned to be used but is 
   -- required implementation for Hashable .
   hashWithSalt salt (RInt32  i) = hashWithSalt salt i
   hashWithSalt salt (RString s) = hashWithSalt salt s
 
-  hash (RInt32  i) = hash i
-  hash (RString s) = hash s
+  hash (RInt32  (Just i)) = hash i
+  hash (RInt32  Nothing ) = error "Can't hash NULL value"
+  hash (RString (Just s)) = hash s
+  hash (RString Nothing ) = error "Can't hash NULL value"
 
 type Row = [ColValue]
 

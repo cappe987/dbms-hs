@@ -11,6 +11,9 @@ intMax = 2147483647
 nullpointer :: Int32
 nullpointer = 0
 
+nullvalue :: Char
+nullvalue = '\NUL'
+
 -- Size of a block on disk
 blocksize :: Int
 -- blocksize = 4096

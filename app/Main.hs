@@ -16,18 +16,18 @@ testschema = [
   , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[          ]}}
   ]
 testrow    = VerifiedRow [
-              NamedColValue{colname="user_id", value=RInt32 0}, 
-              NamedColValue{colname="username", value=RString "Hello"}
+              NamedColValue{colname="user_id" , value=RInt32 $ Just 0}, 
+              NamedColValue{colname="username", value=RString $ Just "Hello"}
             ]
 
-testrow2   = [RInt32 11, RString "World"]
-testrow3   = [RInt32 1, RString "Greetings"]
-testrow4   = [RInt32 12, RString "Planet"]
+-- testrow2   = [RInt32 11, RString "World"]
+-- testrow3   = [RInt32 1, RString "Greetings"]
+-- testrow4   = [RInt32 12, RString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 testrow5   = VerifiedRow [
-              NamedColValue{colname="user_id" , value=RInt32 2},
-              NamedColValue{colname="username", value=RString "Heyo"}
+              NamedColValue{colname="user_id" , value=RInt32 $ Just 2},
+              NamedColValue{colname="username", value=RString Nothing}
             ]
 
 main :: IO ()
@@ -54,7 +54,7 @@ main = do
   -- print res
   -- setHashPosition details 7 2
   -- print res
-  res <- getActualPosition details 2
+  -- res <- getActualPosition details 2
   print res
 
 

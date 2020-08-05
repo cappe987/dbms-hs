@@ -1,10 +1,11 @@
 module DBMS.Storage.Decoder 
-  ( decodeInt
+  ( decodeIntValue
   , decodeVarchar
   , decodeRow
   , decodeRows
   , decodeBlock 
-  , getPointer)
+  , getPointer
+  , decodeInt)
   
   where
 
@@ -18,6 +19,7 @@ import Data.Either
 import Control.Monad.Trans.State as ST
 
 import DBMS.Schema.Types
+import DBMS.Storage.Constants
 
 
 -- What about the Either from Serialize.decode? Ignore it for now?
@@ -25,14 +27,38 @@ import DBMS.Schema.Types
 
 -- Type parsers
 
-parseInt :: State ByteString Int32
-parseInt = do
+parseNullByte :: State ByteString Char
+parseNullByte = do 
+  bs <- ST.get
+  let res = fromRight '\NUL' $ decode $ C8.take 1 bs :: Char
+  ST.put $ C8.drop 1 bs
+  return res
+  
+parsePointerInt :: State ByteString Int32
+parsePointerInt = do
   bs <- ST.get
   let int = decode $ C8.take 4 bs
       res = fromRight 0 int :: Int32
   ST.put $ C8.drop 4 bs
-
   return res
+
+
+parseMaybeInt :: State ByteString (Maybe Int32)
+parseMaybeInt = do
+  nullbyte <- parseNullByte
+
+  if nullbyte == nullvalue then do
+    bs <- ST.get
+    ST.put $ C8.drop 4 bs
+    return Nothing
+  else 
+    Just <$> parsePointerInt
+    -- bs <- ST.get
+    -- let int = decode $ C8.take 4 bs
+    --     res = fromRight 0 int :: Int32
+    -- ST.put $ C8.drop 4 bs
+
+    -- return $ Just res
 
 parseAppendChar :: String -> State ByteString String
 parseAppendChar s = do
@@ -47,15 +73,23 @@ parseVarcharLoop 0   s = return $ Prelude.reverse s
 parseVarcharLoop len s = 
   parseAppendChar s >>= parseVarcharLoop (len-1)
 
-parseVarchar :: Int32 -> State ByteString String
-parseVarchar n = parseVarcharLoop n ""
+parseMaybeVarchar :: Int32 -> State ByteString (Maybe String)
+parseMaybeVarchar n = 
+  do 
+    nullbyte <- parseNullByte
+    if nullbyte == nullvalue then do
+      bs <- ST.get
+      ST.put $ C8.drop (fromIntegral n) bs
+      return Nothing -- Null found in string
+    else 
+      Just <$> parseVarcharLoop n ""
 
 
 
 -- Get parser for matching schema
 getParser :: ColumnSchema -> State ByteString ColValue
-getParser ColumnSchema{typeof=SInt32    } = RInt32   <$> parseInt
-getParser ColumnSchema{typeof=SVarchar n} = RString  <$> parseVarchar n
+getParser ColumnSchema{typeof=SInt32    } = RInt32   <$> parseMaybeInt
+getParser ColumnSchema{typeof=SVarchar n} = RString  <$> parseMaybeVarchar n
 
 
 
@@ -80,11 +114,11 @@ removePaddingToPointer xs
   | otherwise = C8.reverse $ C8.take 4 $ C8.reverse xs
 
 parsePointer :: State ByteString Int32
-parsePointer = do 
+parsePointer = do
   bs <- ST.get
   let pointerBytes = removePaddingToPointer bs
   ST.put pointerBytes
-  parseInt
+  parsePointerInt
 
 
 
@@ -100,14 +134,17 @@ parseRows schema n = do
 
 -- Public decoders
 
-decodeInt :: ByteString -> Int32
-decodeInt = evalState parseInt
+decodeIntValue :: ByteString -> Maybe Int32
+decodeIntValue = evalState parseMaybeInt
 
-decodeVarchar :: Int32 -> ByteString -> String
-decodeVarchar n = evalState (parseVarchar n)
+decodeVarchar :: Int32 -> ByteString -> Maybe String
+decodeVarchar n = evalState (parseMaybeVarchar n)
 
 getPointer :: ByteString -> Int32
 getPointer = evalState parsePointer
+
+decodeInt :: ByteString -> Int32
+decodeInt = evalState parsePointerInt
 
 decodeRow :: Schema -> ByteString -> Row
 decodeRow schema = evalState (parseRow schema)
@@ -117,4 +154,4 @@ decodeRows schema n = evalState (parseRows schema n)
 
 decodeBlock :: Schema -> ByteString -> ([Row], Int32)
 decodeBlock schema = 
-  evalState ((,) <$> (parseInt >>= parseRows schema) <*> parsePointer)
+  evalState ((,) <$> (parsePointerInt >>= parseRows schema) <*> parsePointer)

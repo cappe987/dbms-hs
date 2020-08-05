@@ -12,12 +12,17 @@ import DBMS.Schema.Types
 import DBMS.Schema.Information
 import DBMS.Storage.Constants
 
+
+encodeNull    = encode '\NUL'
+encodeNotNull = encode '\SOH'
+
 -- Documentation says C8.pack can be a bottleneck
 encodeString :: String -> ByteString
 encodeString = C8.pack
 
-encodeVarchar :: Int32 -> String -> ByteString
-encodeVarchar n s = encodeString (fill $ P.reverse s)
+encodeMaybeVarchar :: Int32 -> Maybe String -> ByteString
+encodeMaybeVarchar n Nothing = encodeNull <> C8.pack (P.replicate (fromIntegral n) '\NUL')
+encodeMaybeVarchar n (Just s) = encodeNotNull <> encodeString (fill $ P.reverse s)
   where len  s = fromIntegral $ P.length s
         fill s
           | len s < n = fill ('\NUL':s)
@@ -34,13 +39,16 @@ encodeVarchar n s = encodeString (fill $ P.reverse s)
 -- test = fromJust $ C.fromByteString bs :: String
 
 
-encodeInt :: Int32 -> ByteString
-encodeInt = encode
+encodeMaybeInt :: Maybe Int32 -> ByteString
+encodeMaybeInt (Just i)= encodeNotNull <> encode i
+encodeMaybeInt Nothing = encodeNull    <> C8.pack "\NUL\NUL\NUL\NUL"
 
+encodeInt :: Int32 -> ByteString
+encodeInt = encode 
 
 encodeRowValue :: ColumnSchema -> ColValue -> ByteString
-encodeRowValue ColumnSchema{typeof=SInt32    } (RInt32 d) = encodeInt d
-encodeRowValue ColumnSchema{typeof=SVarchar n} (RString s) = encodeVarchar n s
+encodeRowValue ColumnSchema{typeof=SInt32    } (RInt32 d)  = encodeMaybeInt d
+encodeRowValue ColumnSchema{typeof=SVarchar n} (RString s) = encodeMaybeVarchar n s
 encodeRowValue a b = trace (show a ++ show b) undefined--fail "Handle this earlier in the process"
 
 -- Maybe add error messages here, for when the schema doesn't match input.
