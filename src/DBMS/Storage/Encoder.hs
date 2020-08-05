@@ -25,6 +25,13 @@ encodeVarchar n s = encodeString (fill $ P.reverse s)
           | otherwise = P.reverse s
     
 
+-- bs :: ByteString
+-- bs = C.toByteString' "😀"
+
+-- bs2 :: ByteString
+-- bs2 = C.toByteString' "aä"
+
+-- test = fromJust $ C.fromByteString bs :: String
 
 
 encodeInt :: Int32 -> ByteString

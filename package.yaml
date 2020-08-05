@@ -25,6 +25,8 @@ dependencies:
 - cereal == 0.5.8.1
 - transformers
 - hashable == 1.3.0.0
+# - utf8-string == 1.0.1.1
+# - bytestring-conversion == 0.3.1
 
 library:
   source-dirs: src
