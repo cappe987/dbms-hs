@@ -27,13 +27,6 @@ removeColNames :: NamedRow a => a -> Row
 removeColNames = P.map value . unwrap
 
 
-checkSchemaType :: ColumnSchema -> ColValue -> Bool
-checkSchemaType ColumnSchema{typeof=SInt32    } (RInt32  _) = True
-checkSchemaType ColumnSchema{typeof=SVarchar _} (RString _) = True
-checkSchemaType _ _ = False
-
-schemaMatches :: Schema -> Row -> Bool
-schemaMatches ss rs = and $ P.zipWith checkSchemaType ss rs
 
 
 

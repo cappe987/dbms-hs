@@ -88,6 +88,8 @@ data TableDetails = TableDetails {
 
 class NamedRow a where
   unwrap :: a -> RowWithNames
+  -- Not sure if I'll ever use wrap
+  wrap   :: RowWithNames -> a
 
 
 newtype UnverifiedRow = 
@@ -100,6 +102,8 @@ newtype VerifiedRow   =
 
 instance NamedRow VerifiedRow where
   unwrap (VerifiedRow row) = row
+  wrap = VerifiedRow 
 
 instance NamedRow UnverifiedRow where
   unwrap (UnverifiedRow row) = row
+  wrap = UnverifiedRow 
