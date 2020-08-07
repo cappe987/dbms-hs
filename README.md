@@ -20,3 +20,5 @@ There are no plans to use this in any other real-world project.
 - [ ] Rewrite DBMS.Storage modules to directly manipulate bytestrings. https://wiki.haskell.org/Performance/Strings
 - [ ] Handle UTF-8. Use `Data.ByteString.Conversion`. Right now it only handles ASCII strings.
 - [ ] Make hashtable schema independent of the schema encoder/decoders.
+- [ ] Make EDSL for query language. Use a monad to accumulate the query 
+requirements and then execute it.
