@@ -22,3 +22,4 @@ There are no plans to use this in any other real-world project.
 - [ ] Make hashtable schema independent of the schema encoder/decoders.
 - [ ] Make EDSL for query language. Use a monad to accumulate the query 
 requirements and then execute it.
+- [ ] Replace Maybe's with Either for displaying error messages.

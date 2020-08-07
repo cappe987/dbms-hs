@@ -1,19 +1,20 @@
 module DBMS.Schema.Verification 
-  ( tryGetPK
-  , getPK
-  , getNamedColumn
-  , getColByName
-  , verifyRow
+  -- ( tryGetPK
+  -- , getPK
+  -- , getNamedColumn
+  -- , getColByName
+  -- , verifyRow
 
-  -- , allFieldsMatch
-  -- , hasPK
-  )
+  -- -- , allFieldsMatch
+  -- -- , hasPK
+  -- )
   
   where
 
 
 -- import Prelude as P
 import Data.Maybe
+import Data.List
 
 import DBMS.Schema.Types
 import DBMS.Schema.Information
@@ -53,6 +54,7 @@ getPK schema row =
 
 
 
+-- Match row data with the schema order
 reorganizeRow :: Schema -> VerifiedRow -> VerifiedRow
 reorganizeRow schema (VerifiedRow row) = undefined
 
@@ -76,9 +78,15 @@ checkSchemaType cschema col =
 -- schemaMatches :: Schema -> Row -> Bool
 -- schemaMatches ss rs = and $ P.zipWith checkSchemaType ss rs
 
+rowcolInSchema :: Schema -> NamedColValue -> Bool
+rowcolInSchema schema col = any (`checkSchemaType` col) schema
+
+schemaColInRow :: ColumnSchema -> RowWithNames -> Bool
+schemaColInRow scol = any (checkSchemaType scol) 
+
 allFieldsMatch :: Schema -> UnverifiedRow -> Bool
 allFieldsMatch schema (UnverifiedRow row) = 
-  all (\col -> any (`checkSchemaType` col) schema) row
+  all (rowcolInSchema schema) row
 
 conditions :: [Schema -> UnverifiedRow -> Bool]
 conditions = [
@@ -86,13 +94,34 @@ conditions = [
     , allFieldsMatch
   ]
 
+  
 
-fillNullFields :: Schema -> VerifiedRow -> VerifiedRow
-fillNullFields schema row = undefined
+schemaRowDiff :: NamedRow r => Schema -> r -> (Schema, r)
+schemaRowDiff schema row = 
+  let missingFields = filter (\sc -> not $ any (checkSchemaType sc) (unwrap row)) schema
+      invalidFields = filter (not . rowcolInSchema (schema \\ missingFields)) $ unwrap row
+  in (missingFields, wrap invalidFields)
+  
+
+
+fillNullFields :: Schema -> UnverifiedRow -> Maybe VerifiedRow
+fillNullFields missing row = undefined
+
+
+formatRow :: Schema -> UnverifiedRow -> Maybe VerifiedRow
+formatRow schema row = do 
+  let (missing, UnverifiedRow invalid) = schemaRowDiff schema row
+
+  if null invalid then do
+    filledSchema <- fillNullFields missing row
+    Just $ reorganizeRow schema filledSchema
+  else
+    Nothing
 
 verifyRow :: Schema -> UnverifiedRow -> Maybe VerifiedRow
 verifyRow schema row = 
   if all (\f -> f schema row) conditions then
-    Just $ VerifiedRow $ unwrap row
+    -- fillNullFields schema row
+    undefined
   else
     Nothing

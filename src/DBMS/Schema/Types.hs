@@ -51,7 +51,7 @@ data RowProperty =
 data ColumnInfo = ColumnInfo {
     name       :: String 
   , properties :: [RowProperty]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 
 
@@ -67,7 +67,7 @@ data DataTypes =
 data ColumnSchema = ColumnSchema {
       typeof :: DataTypes
     , info   :: ColumnInfo
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 type Schema = [ColumnSchema]
 
