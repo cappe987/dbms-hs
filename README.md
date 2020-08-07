@@ -9,8 +9,9 @@ There are no plans to use this in any other real-world project.
 - [ ] Implement schema checking and filling in NULL/default values.
 - [X] Implement hash table
 - [ ] Implement main db file for storing schemas. 
-- [ ] Check if PK exists when inserting row.
-- [ ] Handle NULL values
+- [X] Check if PK exists when inserting row.
+- [X] Handle NULL values
+- [ ] Maybe use a shared type (schema vs row) for the name/type of columns.
 
 ## Long term
 - [ ] Add rehashing to hashtables
