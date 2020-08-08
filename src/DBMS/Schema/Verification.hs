@@ -103,10 +103,16 @@ schemaRowDiff schema row =
   in (missingFields, wrap invalidFields)
   
 
--- Returns Nothing if an empty field is marked NotNull
+-- Returns Left if an empty field is marked NotNull
 fillNullFields :: Schema -> UnverifiedRow -> Either String UnverifiedRow
-fillNullFields missing row = undefined
-
+fillNullFields missing row = 
+  let notnulls = -- Rows that aren't allowed to be null
+        filter ((not.null.intersect [PrimaryKey, NotNull]).properties.info) missing
+  in
+    if not $ null notnulls then
+      Left "NotNull field was left empty"
+    else
+      undefined
 
 
 verifyRow :: Schema -> UnverifiedRow -> Either String VerifiedRow

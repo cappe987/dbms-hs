@@ -14,9 +14,15 @@ import Data.ByteString
 testschema = [
     ColumnSchema{typeof=SInt32     , info=ColumnInfo{name="user_id" , properties=[PrimaryKey]}}
   , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[          ]}}
-  , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="password", properties=[          ]}}
+  , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="password", properties=[NotNull          ]}}
   ]
 testrow    = VerifiedRow [
+              NamedColValue  {colname="user_id" , value=RInt32  $ Just 0} 
+              , NamedColValue{colname="username", value=RString $ Just "Hello"}
+              , NamedColValue{colname="email   ", value=RString $ Just "Hello"}
+            ]
+
+testrowun    = UnverifiedRow [
               NamedColValue  {colname="user_id" , value=RInt32  $ Just 0} 
               , NamedColValue{colname="username", value=RString $ Just "Hello"}
               , NamedColValue{colname="email   ", value=RString $ Just "Hello"}
