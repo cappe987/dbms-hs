@@ -56,7 +56,7 @@ getPK schema row =
 
 -- Match row data with the schema order
 reorganizeRow :: Schema -> UnverifiedRow -> UnverifiedRow
-reorganizeRow schema row = undefined
+reorganizeRow schema row = row
 
 -- -- Notes --
 -- If a column has Default and NotNull, remove the NotNull when creating schema.
@@ -64,66 +64,66 @@ reorganizeRow schema row = undefined
 -- not null then NotNull won't make sense.
 
 
-colTypeMatches :: DataTypes -> ColValue -> Bool
-colTypeMatches SInt32       (RInt32  _) = True
-colTypeMatches (SVarchar _) (RString _) = True
-colTypeMatches _ _ = False
+-- Assumes the row is sorted according to schema
+-- allTypesMatch :: Schema -> UnverifiedRow -> Bool
+-- allTypesMatch schema (UnverifiedRow row) = 
+--   go schema row
+--   where
+--     go (s:ss) (c:rs) = checkSchemaType s c && go ss rs
+--     go [] (_:_)      = False
+--     go (_:_) []      = True -- Shouldn't happend if it's been sorted and filled though, but just in case. If schema is longer than input then everything is alright.
+--     go [] []         = True
 
-checkSchemaType :: ColumnSchema -> NamedColValue -> Bool
-checkSchemaType cschema col = 
-  let typeMatches = colTypeMatches (typeof cschema) (value col)
-      nameMatches = name (info cschema) == colname col
-  in typeMatches && nameMatches
+-- allFieldsMatch :: Schema -> UnverifiedRow -> Either String UnverifiedRow
+-- allFieldsMatch schema row = 
+--   if all (rowcolInSchema schema) $ unwrap row then
+--     Right row
+--   else
+--     Left ""
 
--- schemaMatches :: Schema -> Row -> Bool
--- schemaMatches ss rs = and $ P.zipWith checkSchemaType ss rs
+-- conditions :: [Schema -> UnverifiedRow -> Bool]
+-- conditions = [
+--       hasPK
+--     -- , allFieldsMatch
+--   ]
 
-rowcolInSchema :: Schema -> NamedColValue -> Bool
-rowcolInSchema schema col = any (`checkSchemaType` col) schema
-
-schemaColInRow :: ColumnSchema -> UnverifiedRow -> Bool
-schemaColInRow scol = any (checkSchemaType scol) . unwrap
-
-allFieldsMatch :: Schema -> UnverifiedRow -> Bool
-allFieldsMatch schema (UnverifiedRow row) = 
-  all (rowcolInSchema schema) row
-
-conditions :: [Schema -> UnverifiedRow -> Bool]
-conditions = [
-      hasPK
-    -- , allFieldsMatch
-  ]
-
-  
-
-schemaRowDiff :: NamedRow r => Schema -> r -> (Schema, r)
-schemaRowDiff schema row = 
-  let missingFields = filter (\sc -> not $ any (checkSchemaType sc) (unwrap row)) schema
-      invalidFields = filter (not . rowcolInSchema (schema \\ missingFields)) $ unwrap row
-  in (missingFields, wrap invalidFields)
   
 
 -- Returns Left if an empty field is marked NotNull
-fillNullFields :: Schema -> UnverifiedRow -> Either String UnverifiedRow
-fillNullFields missing row = 
+fillEmptyFields :: Schema -> UnverifiedRow -> Either String UnverifiedRow
+fillEmptyFields missing (UnverifiedRow row) = do
   let notnulls = -- Rows that aren't allowed to be null
         filter ((not.null.intersect [PrimaryKey, NotNull]).properties.info) missing
-  in
-    if not $ null notnulls then
-      Left "NotNull field was left empty"
-    else
-      undefined
+
+  if not $ null notnulls then
+    Left $ "NotNull field was left empty " ++ show notnulls
+  else
+    Right $ UnverifiedRow $ row <> map getDefaultOrNull missing
 
 
-verifyRow :: Schema -> UnverifiedRow -> Either String VerifiedRow
-verifyRow schema row = do
+      
+
+validateInput :: Schema -> UnverifiedRow -> Either String (UnverifiedRow, Schema)
+validateInput schema row = do
   let (missing, UnverifiedRow invalid) = schemaRowDiff schema row
 
   if not $ null invalid then 
-    Left "Invalid column name"
+    Left $ "Invalid column name(s) or type mismatch: " ++ show invalid
   else if any (elem PrimaryKey . properties . info) missing then
     Left "Missing primary key" -- True if the PK column is in the list of missing data
-    -- Maybe handle this in fillNullFields since PK and NotNull can be treated the same
-  else do
-    filledSchema <- fillNullFields missing row
-    Right $ VerifiedRow $ unwrap $ reorganizeRow schema filledSchema
+    -- Maybe handle this in fillEmptyFields
+  else 
+    Right (row, missing)
+
+verifyRow :: Schema -> UnverifiedRow -> Either String VerifiedRow
+verifyRow schema row = do
+
+  (row, missing) <- validateInput schema row
+  filledSchema   <- fillEmptyFields missing row
+  let final = reorganizeRow schema filledSchema
+  -- if allTypesMatch final 
+  Right $ VerifiedRow $ unwrap final 
+
+  -- validateInput schema row
+  -- >>= uncurry (flip fillEmptyFields)
+  -- >>= (Right . VerifiedRow . unwrap . reorganizeRow schema)
