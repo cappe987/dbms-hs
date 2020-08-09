@@ -6,12 +6,13 @@ There are no plans to use this in any other real-world project.
 
 ## Short term
 - [ ] Reorganize insert data to match schema
-- [ ] Implement schema checking and filling in NULL/default values.
+- [X] Implement schema checking and filling in NULL/default values.
 - [X] Implement hash table
 - [ ] Implement main db file for storing schemas. 
 - [X] Check if PK exists when inserting row.
 - [X] Handle NULL values
 - [ ] Maybe use a shared type (schema vs row) for the name/type of columns.
+- [ ] Complete type refactoring.
 
 ## Long term
 - [ ] Add rehashing to hashtables
