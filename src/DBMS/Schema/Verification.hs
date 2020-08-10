@@ -54,9 +54,16 @@ getPK schema row =
 
 
 
+
+getColumn :: ColumnSchema -> UnverifiedRow -> NamedColValue
+getColumn colschema (UnverifiedRow row) = 
+  let columnName = name $ info colschema
+  in fromJust $ find (\col -> colname col == columnName) row
+
 -- Match row data with the schema order
 reorganizeRow :: Schema -> UnverifiedRow -> UnverifiedRow
-reorganizeRow schema row = row
+reorganizeRow schema row = 
+  UnverifiedRow $ map (`getColumn` row) schema
 
 -- -- Notes --
 -- If a column has Default and NotNull, remove the NotNull when creating schema.

@@ -5,7 +5,7 @@ There are no plans to use this in any other real-world project.
 # To-do
 
 ## Short term
-- [ ] Reorganize insert data to match schema
+- [X] Reorganize insert data to match schema
 - [X] Implement schema checking and filling in NULL/default values.
 - [X] Implement hash table
 - [ ] Implement main db file for storing schemas. 
