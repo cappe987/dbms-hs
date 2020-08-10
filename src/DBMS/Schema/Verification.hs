@@ -1,13 +1,13 @@
 module DBMS.Schema.Verification 
-  -- ( tryGetPK
-  -- , getPK
-  -- , getNamedColumn
-  -- , getColByName
-  -- , verifyRow
+  ( getNamedColumn
+  , getColByName
+  , tryGetPK
+  , getPK
+  , verifyInsertRow
 
-  -- -- , allFieldsMatch
-  -- -- , hasPK
-  -- )
+  -- , allFieldsMatch
+  -- , hasPK
+  )
   
   where
 
@@ -45,8 +45,8 @@ tryGetPK :: NamedRow r => Schema -> r -> Maybe NamedColValue
 tryGetPK schema row = 
   getPKColumn schema >>= flip getNamedColumn row
 
-hasPK :: Schema -> UnverifiedRow -> Bool
-hasPK schema row = isJust $ tryGetPK schema row
+-- hasPK :: Schema -> UnverifiedRow -> Bool
+-- hasPK schema row = isJust $ tryGetPK schema row
 
 getPK :: Schema -> VerifiedRow -> NamedColValue
 getPK schema row = 
@@ -60,7 +60,8 @@ getColumn colschema (UnverifiedRow row) =
   let columnName = name $ info colschema
   in fromJust $ find (\col -> colname col == columnName) row
 
--- Match row data with the schema order
+-- Match row data with the schema order 
+-- Requires all fields to exist
 reorganizeRow :: Schema -> UnverifiedRow -> UnverifiedRow
 reorganizeRow schema row = 
   UnverifiedRow $ map (`getColumn` row) schema
@@ -122,8 +123,8 @@ validateInput schema row = do
   else 
     Right (row, missing)
 
-verifyRow :: Schema -> UnverifiedRow -> Either String VerifiedRow
-verifyRow schema row = do
+verifyInsertRow :: Schema -> UnverifiedRow -> Either String VerifiedRow
+verifyInsertRow schema row = do
 
   (row, missing) <- validateInput schema row
   filledSchema   <- fillEmptyFields missing row

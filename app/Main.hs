@@ -23,8 +23,8 @@ testrow    = VerifiedRow [
             ]
 
 testrowun    = UnverifiedRow [
-              NamedColValue{colname="password", value=RString $ Just "Pass"}
-              , NamedColValue{colname="username", value=RString $ Just "Hello"}
+              -- NamedColValue{colname="password", value=RString $ Just "Pass"}
+              NamedColValue{colname="username", value=RString $ Just "Hello"}
               , NamedColValue  {colname="user_id" , value=RInt32  $ Just 0} 
               -- , NamedColValue{colname="email   ", value=RString $ Just "Hello"}
             ]
