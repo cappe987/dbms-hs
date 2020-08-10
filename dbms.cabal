@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ca8c1265e5984032af875a2fe4548472257dc3014f44104e17d473dab5fcacea
+-- hash: 06e0a271f332abe64906de926155637962890b37d196f827a50adbb4e3378d2e
 
 name:           dbms
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       DBMS.Schema.Information
+      DBMS.Schema.Newtypes
       DBMS.Schema.Types
       DBMS.Schema.Verification
       DBMS.Storage.Constants
