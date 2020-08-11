@@ -12,31 +12,43 @@ import Data.Hashable
 -- assigning column names? Assign names once all the data has been read 
 -- and picked out, for better performance.
 
+-- Schema types
+data ColType = 
+    SInt32   
+  | SVarchar Int32
+  deriving (Show, Eq)
+-- | SBool    [RowProperty] Bool
 
 data ColValue = 
-    RInt32  (Maybe Int32)
-  | RString (Maybe String) 
+    VInt32  (Maybe Int32)
+  | VString (Maybe String) 
   deriving (Show, Eq)
  
 instance Hashable ColValue where
   -- hashWithSalt is not planned to be used but is 
   -- required implementation for Hashable .
-  hashWithSalt salt (RInt32  i) = hashWithSalt salt i
-  hashWithSalt salt (RString s) = hashWithSalt salt s
+  hashWithSalt salt (VInt32  i) = hashWithSalt salt i
+  hashWithSalt salt (VString s) = hashWithSalt salt s
 
-  hash (RInt32  (Just i)) = hash i
-  hash (RInt32  Nothing ) = error "Can't hash NULL value"
-  hash (RString (Just s)) = hash s
-  hash (RString Nothing ) = error "Can't hash NULL value"
+  hash (VInt32  (Just i)) = hash i
+  hash (VInt32  Nothing ) = error "Can't hash NULL value"
+  hash (VString (Just s)) = hash s
+  hash (VString Nothing ) = error "Can't hash NULL value"
+
+
+data Column = Column {
+    typeof :: ColType
+  , value  :: ColValue
+}
 
 type Row = [ColValue]
 
-data NamedColValue = NamedColValue {
+data NamedColumn = NamedColumn {
     colname  :: String
-  , value    :: ColValue
+  , coldata  :: ColValue
   } deriving Show
 
-type RowWithNames = [NamedColValue]
+type RowWithNames = [NamedColumn]
 
 
 
@@ -48,25 +60,20 @@ data RowProperty =
   | Default ColValue
   deriving (Show, Eq)
 
-data ColumnInfo = ColumnInfo {
-    name       :: String 
-  , properties :: [RowProperty]
-  } deriving (Show, Eq)
+-- data ColumnInfo = ColumnInfo {
+--     name       :: String 
+--   , properties :: [RowProperty]
+--   } deriving (Show, Eq)
 
 
 
--- Schema types
-data DataTypes = 
-    SInt32   
-  | SVarchar Int32
-  deriving (Show, Eq)
--- | SBool    [RowProperty] Bool
 
 
 -- The schema itself
 data ColumnSchema = ColumnSchema {
-      typeof :: DataTypes
-    , info   :: ColumnInfo
+      schematype :: ColType
+    , name       :: String
+    , properties :: [RowProperty]
   } deriving (Show, Eq)
 
 type Schema = [ColumnSchema]

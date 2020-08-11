@@ -47,8 +47,8 @@ encodeInt :: Int32 -> ByteString
 encodeInt = encode 
 
 encodeRowValue :: ColumnSchema -> ColValue -> ByteString
-encodeRowValue ColumnSchema{typeof=SInt32    } (RInt32 d)  = encodeMaybeInt d
-encodeRowValue ColumnSchema{typeof=SVarchar n} (RString s) = encodeMaybeVarchar n s
+encodeRowValue ColumnSchema{schematype=SInt32    } (VInt32 d)  = encodeMaybeInt d
+encodeRowValue ColumnSchema{schematype=SVarchar n} (VString s) = encodeMaybeVarchar n s
 encodeRowValue a b = trace (show a ++ show b) undefined--fail "Handle this earlier in the process"
 
 -- Maybe add error messages here, for when the schema doesn't match input.

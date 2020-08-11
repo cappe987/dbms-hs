@@ -88,8 +88,8 @@ parseMaybeVarchar n =
 
 -- Get parser for matching schema
 getParser :: ColumnSchema -> State ByteString ColValue
-getParser ColumnSchema{typeof=SInt32    } = RInt32   <$> parseMaybeInt
-getParser ColumnSchema{typeof=SVarchar n} = RString  <$> parseMaybeVarchar n
+getParser ColumnSchema{schematype=SInt32    } = VInt32   <$> parseMaybeInt
+getParser ColumnSchema{schematype=SVarchar n} = VString  <$> parseMaybeVarchar n
 
 
 

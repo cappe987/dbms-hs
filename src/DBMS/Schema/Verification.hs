@@ -21,13 +21,13 @@ import DBMS.Schema.Information
 
 getPKColumn :: Schema -> Maybe ColumnSchema
 getPKColumn schema = 
-  case filter ((PrimaryKey `elem`) . properties . info) schema of
+  case filter ((PrimaryKey `elem`) . properties) schema of
     []  -> Nothing
     [x] -> Just x
     xs  -> fail ("Too many pk: " ++ show xs ++ " in schema " ++ show schema)
 
 
-getColByName :: NamedRow r => String -> r -> Maybe NamedColValue
+getColByName :: NamedRow r => String -> r -> Maybe NamedColumn
 getColByName s row = 
   case filter ((== s) . colname) (unwrap row) of
     []  -> Nothing
@@ -35,29 +35,29 @@ getColByName s row =
     xs  -> fail ("Multiple columns with same name: " ++ show xs)
 
 
-getNamedColumn :: NamedRow r => ColumnSchema -> r -> Maybe NamedColValue
-getNamedColumn col = getColByName (name $ info col) 
+getNamedColumn :: NamedRow r => ColumnSchema -> r -> Maybe NamedColumn
+getNamedColumn col = getColByName (name col) 
 
 
 
 
-tryGetPK :: NamedRow r => Schema -> r -> Maybe NamedColValue
+tryGetPK :: NamedRow r => Schema -> r -> Maybe NamedColumn
 tryGetPK schema row = 
   getPKColumn schema >>= flip getNamedColumn row
 
 -- hasPK :: Schema -> UnverifiedRow -> Bool
 -- hasPK schema row = isJust $ tryGetPK schema row
 
-getPK :: Schema -> VerifiedRow -> NamedColValue
+getPK :: Schema -> VerifiedRow -> NamedColumn
 getPK schema row = 
   fromJust $ tryGetPK schema row
 
 
 
 
-getColumn :: ColumnSchema -> UnverifiedRow -> NamedColValue
+getColumn :: ColumnSchema -> UnverifiedRow -> NamedColumn
 getColumn colschema (UnverifiedRow row) = 
-  let columnName = name $ info colschema
+  let columnName = name colschema
   in fromJust $ find (\col -> colname col == columnName) row
 
 -- Match row data with the schema order 
@@ -101,7 +101,7 @@ reorganizeRow schema row =
 fillEmptyFields :: Schema -> UnverifiedRow -> Either String UnverifiedRow
 fillEmptyFields missing (UnverifiedRow row) = do
   let notnulls = -- Rows that aren't allowed to be null
-        filter ((not.null.intersect [PrimaryKey, NotNull]).properties.info) missing
+        filter ((not.null.intersect [PrimaryKey, NotNull]).properties) missing
 
   if not $ null notnulls then
     Left $ "NotNull field was left empty " ++ show notnulls
@@ -117,7 +117,7 @@ validateInput schema row = do
 
   if not $ null invalid then 
     Left $ "Invalid column name(s) or type mismatch: " ++ show invalid
-  else if any (elem PrimaryKey . properties . info) missing then
+  else if any (elem PrimaryKey . properties) missing then
     Left "Missing primary key" -- True if the PK column is in the list of missing data
     -- Maybe handle this in fillEmptyFields
   else 

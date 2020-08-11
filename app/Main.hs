@@ -12,31 +12,31 @@ import System.IO
 import Data.ByteString
 
 testschema = [
-    ColumnSchema{typeof=SInt32     , info=ColumnInfo{name="user_id" , properties=[PrimaryKey]}}
-  , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="username", properties=[NotNull          ]}}
-  , ColumnSchema{typeof=SVarchar 10, info=ColumnInfo{name="password", properties=[                 ]}}
+    ColumnSchema{schematype=SInt32     , name="user_id" , properties=[PrimaryKey]}
+  , ColumnSchema{schematype=SVarchar 10, name="username", properties=[NotNull          ]}
+  , ColumnSchema{schematype=SVarchar 10, name="password", properties=[                 ]}
   ]
 testrow    = VerifiedRow [
-              NamedColValue  {colname="user_id" , value=RInt32  $ Just 0} 
-              , NamedColValue{colname="username", value=RString $ Just "Hello"}
-              , NamedColValue{colname="email   ", value=RString $ Just "Hello"}
+              NamedColumn  {colname="user_id" , coldata=VInt32  $ Just 0} 
+              , NamedColumn{colname="username", coldata=VString $ Just "Hello"}
+              , NamedColumn{colname="email   ", coldata=VString $ Just "Hello"}
             ]
 
 testrowun    = UnverifiedRow [
-              -- NamedColValue{colname="password", value=RString $ Just "Pass"}
-              NamedColValue{colname="username", value=RString $ Just "Hello"}
-              , NamedColValue  {colname="user_id" , value=RInt32  $ Just 0} 
-              -- , NamedColValue{colname="email   ", value=RString $ Just "Hello"}
+              -- NamedColumn{colname="password", coldata=VString $ Just "Pass"}
+              NamedColumn{colname="username", coldata=VString $ Just "Hello"}
+              , NamedColumn  {colname="user_id" , coldata=VInt32  $ Just 0} 
+              -- , NamedColumn{colname="email   ", coldata=VString $ Just "Hello"}
             ]
 
--- testrow2   = [RInt32 11, RString "World"]
--- testrow3   = [RInt32 1, RString "Greetings"]
--- testrow4   = [RInt32 12, RString "Planet"]
+-- testrow2   = [VInt32 11, VString "World"]
+-- testrow3   = [VInt32 1, VString "Greetings"]
+-- testrow4   = [VInt32 12, VString "Planet"]
 details    = TableDetails {schema=testschema, rowsize=getRowsize testschema, tablename="test", primesize=11}
 
 testrow5   = VerifiedRow [
-              NamedColValue{colname="user_id" , value=RInt32 $ Just 2},
-              NamedColValue{colname="username", value=RString Nothing}
+              NamedColumn{colname="user_id" , coldata=VInt32 $ Just 2},
+              NamedColumn{colname="username", coldata=VString Nothing}
             ]
 
 main :: IO ()

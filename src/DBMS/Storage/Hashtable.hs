@@ -36,8 +36,8 @@ primes = [11, 37, 53, 97, 193, 389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 
 
 htableschema :: Schema
 htableschema = [
-    ColumnSchema{typeof=SInt32, info=ColumnInfo{name="hashindex"   , properties=[PrimaryKey]}}
-  , ColumnSchema{typeof=SInt32, info=ColumnInfo{name="blockpointer", properties=[]          }}
+    ColumnSchema{schematype=SInt32, name="hashindex"   , properties=[PrimaryKey]}
+  , ColumnSchema{schematype=SInt32, name="blockpointer", properties=[]          }
   ]
 
 htableRowsize :: Int32
@@ -51,7 +51,7 @@ createTable details = do
 
   hdl <- openFile (tablename details ++ ".bin") WriteMode
 
-  let keymap = P.map (\i -> [RInt32 $ Just i, RInt32 $ Just 0]) [0..size] :: [Row]
+  let keymap = P.map (\i -> [VInt32 $ Just i, VInt32 $ Just 0]) [0..size] :: [Row]
       bss    = createBlocks htableschema keymap
       len    = fromIntegral $ P.length bss :: Int32
       blocks = 
@@ -70,7 +70,7 @@ getPositionInHashtable hashindex =
 
 
 hashPK :: TableDetails -> VerifiedRow -> Int32
-hashPK details row = fromIntegral $ hash (value $ getPK (schema details) row)
+hashPK details row = fromIntegral $ hash (coldata $ getPK (schema details) row)
 
 -- Returns the actual position that the hashindex corresponds to
 -- Fetching the index requires opening of the table's file
@@ -86,9 +86,9 @@ getActualPosition details hash = do
   bs <- hGet hdl blocksize
 
   let (rows, _)    = decodeBlock htableschema bs
-      row          = P.dropWhile (\[RInt32 (Just hash), RInt32 _] -> hash /= index) rows
-      (RInt32 (Just res)) = (\[_,x] -> x) $ P.head row 
-      -- Result should alwas be RInt32 (Just res)
+      row          = P.dropWhile (\[VInt32 (Just hash), VInt32 _] -> hash /= index) rows
+      (VInt32 (Just res)) = (\[_,x] -> x) $ P.head row 
+      -- Result should alwas be VInt32 (Just res)
 
   hClose hdl
   return res
@@ -99,13 +99,13 @@ getIndexByValue details value =
   
 getIndex :: TableDetails -> VerifiedRow -> IO Int32
 getIndex details row = 
-  getIndexByValue details (value $ getPK (schema details) row)
+  getIndexByValue details (coldata $ getPK (schema details) row)
 
 
 
 updateHashpointer :: Int32 -> Int32 -> Row -> Row
-updateHashpointer index p xs@[RInt32 (Just i), RInt32 _]
-  | i == index = [RInt32 $ Just i, RInt32 $ Just p]
+updateHashpointer index p xs@[VInt32 (Just i), VInt32 _]
+  | i == index = [VInt32 $ Just i, VInt32 $ Just p]
   | otherwise = xs
 
 
